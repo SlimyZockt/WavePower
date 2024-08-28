@@ -15,6 +15,7 @@ play_btn.innerHTML = play_icon;
  * @type {AudioContext | undefined}
  */
 let audioCtx = undefined;
+let time = 0.0;
 
 /**
  * @type {AudioBuffer[]}
@@ -22,19 +23,27 @@ let audioCtx = undefined;
 let audio_buffers = [];
 
 async function play_sound() {
-  while (is_playing && audio_buffers.length > 0) {
-    let source = audioCtx.createBufferSource();
-    source.buffer = audio_buffers.shift();
-    console.log(source.buffer.duration);
-    console.log(source.buffer.length);
-    source.connect(audioCtx.destination);
-    source.start(0);
-  }
+  if (!is_playing) return;
+  if (audio_buffers == 0) return;
+  let source = audioCtx.createBufferSource();
+  source.buffer = audio_buffers.shift();
+  source.connect(audioCtx.destination);
+  source.start(0);
+  source.addEventListener("ended", () => {
+    source.stop();
+    source.disconnect(audioCtx.destination);
+    play_sound();
+  });
 }
 
 play_btn.addEventListener("click", async () => {
   is_playing = !is_playing;
   play_btn.innerHTML = is_playing ? pause_icon : play_icon;
+
+  if (is_playing == false) {
+    audioCtx.suspend();
+    return;
+  }
 
   if (audioCtx == undefined) {
     audioCtx = new AudioContext();
@@ -46,7 +55,9 @@ play_btn.addEventListener("click", async () => {
     return;
   }
 
-  audioCtx.resume();
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
 
   let res = await fetch("/audio/1", {
     method: "POST",
@@ -56,6 +67,7 @@ play_btn.addEventListener("click", async () => {
 
   for await (const chunk of res.body) {
     if (chunk instanceof Uint8Array) {
+      console.log(chunk);
       let audio_buffer = await audioCtx.decodeAudioData(chunk.buffer);
       audio_buffers.push(audio_buffer);
     }
