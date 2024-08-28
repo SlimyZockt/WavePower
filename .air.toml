@@ -3,9 +3,21 @@ tmp_dir = "tmp"
 
 [build]
     args_bin = []
-    bin = "./tmp/main.exe"
-    cmd = "templ generate && go build -o ./tmp/main.exe ."
+    bin = "./tmp/server.exe"
+    cmd = "templ generate && npx tailwind -o ./include_dir/output.css && go build -o ./tmp ."
     post_cmd = ["echo build completed"]
     pre_cmd = ["echo starting build"]
+    exclude_regex = [".*_templ.go"]
+    exclude_unchanged = false
+    follow_syslink = false
+    full_bin=""
+    delay = 1
+    kill_delay = "0s"
+    exclude_dir = ["assets", "tmp", "include_dir"]
     include_dir = []
     include_ext = ["go", "tpl", "tmpl", "templ", "html", "css", "js", "jpg", "jpeg", "svg"]
+
+[proxy]
+    enabled = true
+    proxy_port = 3000
+    app_port = 8080

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WavePower</title>
+    <script src="https://unpkg.com/htmx.org@2.0.0"></script>
+    <script src="./main.js" defer></script>
+    <link rel="stylesheet" href="output.css">
+</head>
+
+<body>
+    <div class="hero min-h-screen">
+        <div class="flex flex-col gap-3">
+            <div class="flex flex-row justify-between gap-2 items-end">
+                <div class="grow">
+                    <p class="font-bold text-lg">Lofi Beats</p>
+                    <p>Chill Vibes</p>
+                </div>
+                <button class="btn btn-ghost btn-square rounded-lg btn-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+                        <path fill="currentColor"
+                            d="M237.66 178.34a8 8 0 0 1 0 11.32l-24 24A8 8 0 0 1 200 208v-16a72.15 72.15 0 0 1-57.65-30.14l-41.72-58.4A56.1 56.1 0 0 0 55.06 80H32a8 8 0 0 1 0-16h23.06a72.12 72.12 0 0 1 58.59 30.15l41.72 58.4A56.08 56.08 0 0 0 200 176v-16a8 8 0 0 1 13.66-5.66ZM143 107a8 8 0 0 0 11.16-1.86l1.2-1.67A56.08 56.08 0 0 1 200 80v16a8 8 0 0 0 13.66 5.66l24-24a8 8 0 0 0 0-11.32l-24-24A8 8 0 0 0 200 48v16a72.15 72.15 0 0 0-57.65 30.14l-1.2 1.67A8 8 0 0 0 143 107m-30 42a8 8 0 0 0-11.16 1.86l-1.2 1.67A56.1 56.1 0 0 1 55.06 176H32a8 8 0 0 0 0 16h23.06a72.12 72.12 0 0 0 58.59-30.15l1.2-1.67A8 8 0 0 0 113 149" />
+                    </svg>
+                </button>
+                <button class="btn btn-ghost btn-square rounded-lg btn-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+                        <path fill="currentColor"
+                            d="M24 128a72.08 72.08 0 0 1 72-72h108.69l-10.35-10.34a8 8 0 0 1 11.32-11.32l24 24a8 8 0 0 1 0 11.32l-24 24a8 8 0 0 1-11.32-11.32L204.69 72H96a56.06 56.06 0 0 0-56 56a8 8 0 0 1-16 0m200-8a8 8 0 0 0-8 8a56.06 56.06 0 0 1-56 56H51.31l10.35-10.34a8 8 0 0 0-11.32-11.32l-24 24a8 8 0 0 0 0 11.32l24 24a8 8 0 0 0 11.32-11.32L51.31 200H160a72.08 72.08 0 0 0 72-72a8 8 0 0 0-8-8" />
+                    </svg>
+                </button>
+            </div>
+            <div class="flex flex-row justify-between">
+                <button class="btn btn-ghost btn-square rounded-lg btn-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+                        <path fill="currentColor"
+                            d="M199.81 34a16 16 0 0 0-16.24.43L64 109.23V40a8 8 0 0 0-16 0v176a8 8 0 0 0 16 0v-69.23l119.57 74.78A15.95 15.95 0 0 0 208 208.12V47.88A15.86 15.86 0 0 0 199.81 34M192 208L64.16 128L192 48.07Z" />
+                    </svg>
+                </button>
+                <button id="play_btn" class="btn btn-ghost btn-square rounded-lg btn-xs"></button>
+                <button class="btn btn-ghost btn-square rounded-lg btn-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+                        <path fill="currentColor"
+                            d="M200 32a8 8 0 0 0-8 8v69.23L72.43 34.45A15.95 15.95 0 0 0 48 47.88v160.24a16 16 0 0 0 24.43 13.43L192 146.77V216a8 8 0 0 0 16 0V40a8 8 0 0 0-8-8M64 207.93V48.05l127.84 80Z" />
+                    </svg>
+                </button>
+                <div class="flex justify-end items-center text-sm font-thin">4:20/4:30</div>
+            </div>
+            <div>
+                <input type="range" min="0" max="100" value="40" class="range range-secondary range-xs" />
+            </div>
+            <div class="flex flex-row gap-2">
+                <button class="btn btn-ghost btn-square rounded-lg btn-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2">
+                            <path d="m22 15l-6-6m6 0l-6 6" />
+                            <path stroke-linejoin="round"
+                                d="M2 14.959V9.04C2 8.466 2.448 8 3 8h3.586a.98.98 0 0 0 .707-.305l3-3.388c.63-.656 1.707-.191 1.707.736v13.914c0 .934-1.09 1.395-1.716.726l-2.99-3.369A.98.98 0 0 0 6.578 16H3c-.552 0-1-.466-1-1.041" />
+                        </g>
+                    </svg>
+                </button>
+                <input type="range" min="0" max="100" value="40" class="range range-xs " />
+                <button class="btn btn-ghost btn-square rounded-lg btn-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M2 14.959V9.04C2 8.466 2.448 8 3 8h3.586a.98.98 0 0 0 .707-.305l3-3.388c.63-.656 1.707-.191 1.707.736v13.914c0 .934-1.09 1.395-1.716.726l-2.99-3.369A.98.98 0 0 0 6.578 16H3c-.552 0-1-.466-1-1.041M16 8.5c1.333 1.778 1.333 5.222 0 7M19 5c3.988 3.808 4.012 10.217 0 14" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+
+
+</html>
