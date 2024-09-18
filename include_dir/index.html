@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WavePower</title>
     <script src="https://unpkg.com/htmx.org@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script src="./main.js" defer></script>
     <link rel="stylesheet" href="output.css">
 </head>
@@ -38,37 +39,25 @@
                             d="M199.81 34a16 16 0 0 0-16.24.43L64 109.23V40a8 8 0 0 0-16 0v176a8 8 0 0 0 16 0v-69.23l119.57 74.78A15.95 15.95 0 0 0 208 208.12V47.88A15.86 15.86 0 0 0 199.81 34M192 208L64.16 128L192 48.07Z" />
                     </svg>
                 </button>
-                <button id="play_btn" class="btn btn-ghost btn-square rounded-lg btn-xs"></button>
+                <button id="play-btn" class="btn btn-ghost btn-square rounded-lg btn-xs"></button>
                 <button class="btn btn-ghost btn-square rounded-lg btn-xs">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
                         <path fill="currentColor"
                             d="M200 32a8 8 0 0 0-8 8v69.23L72.43 34.45A15.95 15.95 0 0 0 48 47.88v160.24a16 16 0 0 0 24.43 13.43L192 146.77V216a8 8 0 0 0 16 0V40a8 8 0 0 0-8-8M64 207.93V48.05l127.84 80Z" />
                     </svg>
                 </button>
-                <div class="flex justify-end items-center text-sm font-thin">4:20/4:30</div>
+                <div id="time-left" class="flex justify-end items-center text-sm font-thin"></div>
             </div>
             <div>
-                <input type="range" min="0" max="100" value="40" class="range range-secondary range-xs" />
+                <input id="time-line" type="range" min="0" max="100" value="0"
+                    class="range range-secondary range-xs accent-black" />
             </div>
             <div class="flex flex-row gap-2">
-                <button class="btn btn-ghost btn-square rounded-lg btn-xs">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2">
-                            <path d="m22 15l-6-6m6 0l-6 6" />
-                            <path stroke-linejoin="round"
-                                d="M2 14.959V9.04C2 8.466 2.448 8 3 8h3.586a.98.98 0 0 0 .707-.305l3-3.388c.63-.656 1.707-.191 1.707.736v13.914c0 .934-1.09 1.395-1.716.726l-2.99-3.369A.98.98 0 0 0 6.578 16H3c-.552 0-1-.466-1-1.041" />
-                        </g>
-                    </svg>
+                <button class="btn btn-ghost btn-square rounded-lg btn-xs" id="mute-btn">
                 </button>
-                <input type="range" min="0" max="100" value="40" class="range range-xs " />
-                <button class="btn btn-ghost btn-square rounded-lg btn-xs">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M2 14.959V9.04C2 8.466 2.448 8 3 8h3.586a.98.98 0 0 0 .707-.305l3-3.388c.63-.656 1.707-.191 1.707.736v13.914c0 .934-1.09 1.395-1.716.726l-2.99-3.369A.98.98 0 0 0 6.578 16H3c-.552 0-1-.466-1-1.041M16 8.5c1.333 1.778 1.333 5.222 0 7M19 5c3.988 3.808 4.012 10.217 0 14" />
-                    </svg>
-                </button>
+                <input type="range" min="0" max="100" value="40" class="range progress range-xs" id="volume" />
             </div>
+            <audio id="audio"></audio>
         </div>
     </div>
 </body>

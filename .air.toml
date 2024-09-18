@@ -4,7 +4,7 @@ tmp_dir = "tmp"
 [build]
     args_bin = []
     bin = "./tmp/server.exe"
-    cmd = "templ generate && npx tailwind -o ./include_dir/output.css && go build -o ./tmp ."
+    cmd = "templ generate && go build -o ./tmp . && npx tailwindcss -o ./include_dir/output.css --watch"
     post_cmd = ["echo build completed"]
     pre_cmd = ["echo starting build"]
     exclude_regex = [".*_templ.go"]
