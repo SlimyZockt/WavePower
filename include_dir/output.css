@@ -8488,12 +8488,24 @@ html:has(.drawer-open.drawer-open) {
   inset: -0.25rem;
 }
 
+.left-1\/2 {
+  left: 50%;
+}
+
+.top-1\/2 {
+  top: 50%;
+}
+
 .isolate {
   isolation: isolate;
 }
 
 .isolation-auto {
   isolation: auto;
+}
+
+.z-10 {
+  z-index: 10;
 }
 
 .float-start {
@@ -8659,6 +8671,19 @@ html:has(.drawer-open.drawer-open) {
   width: weird-and-invalid;
 }
 
+.w-full {
+  width: 100%;
+}
+
+.min-w-fit {
+  min-width: -moz-fit-content;
+  min-width: fit-content;
+}
+
+.max-w-xs {
+  max-width: 20rem;
+}
+
 .flex-shrink {
   flex-shrink: 1;
 }
@@ -8717,6 +8742,10 @@ html:has(.drawer-open.drawer-open) {
 
 .transform-none {
   transform: none;
+}
+
+.cursor-grab {
+  cursor: grab;
 }
 
 .touch-auto {
@@ -9501,6 +9530,10 @@ html:has(.drawer-open.drawer-open) {
   border-radius: 0.25rem;
 }
 
+.rounded-box {
+  border-radius: var(--rounded-box, 1rem);
+}
+
 .rounded-lg {
   border-radius: 0.5rem;
 }
@@ -9634,6 +9667,21 @@ html:has(.drawer-open.drawer-open) {
   background-color: rgb(255 0 0 / var(--tw-bg-opacity));
 }
 
+.bg-base-200 {
+  --tw-bg-opacity: 1;
+  background-color: var(--fallback-b2,oklch(var(--b2)/var(--tw-bg-opacity)));
+}
+
+.bg-base-300 {
+  --tw-bg-opacity: 1;
+  background-color: var(--fallback-b3,oklch(var(--b3)/var(--tw-bg-opacity)));
+}
+
+.bg-base-100 {
+  --tw-bg-opacity: 1;
+  background-color: var(--fallback-b1,oklch(var(--b1)/var(--tw-bg-opacity)));
+}
+
 .decoration-slice {
   -webkit-box-decoration-break: slice;
           box-decoration-break: slice;
@@ -9744,6 +9792,10 @@ html:has(.drawer-open.drawer-open) {
      object-fit: scale-down;
 }
 
+.p-2 {
+  padding: 0.5rem;
+}
+
 .text-left {
   text-align: left;
 }
@@ -9800,6 +9852,10 @@ html:has(.drawer-open.drawer-open) {
   vertical-align: super;
 }
 
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
 .text-lg {
   font-size: 1.125rem;
   line-height: 1.75rem;
@@ -9814,8 +9870,8 @@ html:has(.drawer-open.drawer-open) {
   font-weight: 700;
 }
 
-.font-thin {
-  font-weight: 100;
+.font-semibold {
+  font-weight: 600;
 }
 
 .uppercase {
@@ -9939,6 +9995,10 @@ html:has(.drawer-open.drawer-open) {
 .subpixel-antialiased {
   -webkit-font-smoothing: auto;
   -moz-osx-font-smoothing: auto;
+}
+
+.accent-black {
+  accent-color: #000;
 }
 
 .bg-blend-normal {

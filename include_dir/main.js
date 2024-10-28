@@ -42,12 +42,22 @@ volume.value = audio.volume * 100;
 let time_left = document.getElementById("time-left");
 time_left.innerText = "00:00 / 00:00";
 
+/**
+ * @type {HTMLButtonElement}
+ */
+let login = document.getElementById("login");
+
+login.onclick = async () => {
+  window.location.href = "/auth/google";
+  console.log(req);
+};
+
 let is_playing = false;
 let last_tracked_volume = audio.volume;
 let is_muted = false;
 
 if (Hls.isSupported()) {
-  var hls = new Hls();
+  let hls = new Hls();
   hls.loadSource("assets/lofi/output.m3u8");
   hls.attachMedia(audio);
   hls.on(Hls.Events.MANIFEST_PARSED, function () {});

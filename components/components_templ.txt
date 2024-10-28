@@ -1,0 +1,10 @@
+<button class=\"btn btn-neutral\" hx-get=\"/logout/google\" hx-trigger=\"click\" onclick=\"location.reload()\">
+</button>
+<input type=\"file\" class=\"file-input file-input-ghost file-input-bordered w-full max-w-xs\">
+<ul id=\"playlist\" class=\"menu bg-base-300 rounded-box f:wlex-grow text-lg grow\" hx-trigger=\"playlist-changed\" hx-swap=\"outerHTML\" hx-post=\"/playlist\">
+<li>
+</li>
+</ul>
+<a class=\"btn z-10 flex gap-2\" draggable=\"true\" ondrop=\"drop(event)\" ondragover=\"allowDrop(event)\" id=\"
+\" ondragstart=\"drag(event)\"><p class=\"cursor-grab\">::</p><p class=\"grow\">
+</p></a>

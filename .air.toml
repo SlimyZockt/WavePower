@@ -4,7 +4,7 @@ tmp_dir = "tmp"
 [build]
     args_bin = []
     bin = "./tmp/server.exe"
-    cmd = "templ generate && go build -o ./tmp/server.exe . && npx tailwindcss -o ./include_dir/output.css --watch"
+    cmd = "go build -o ./tmp/server.exe ."
     post_cmd = ["echo build completed"]
     pre_cmd = ["echo starting build"]
     exclude_regex = [".*_templ.go"]
@@ -19,5 +19,5 @@ tmp_dir = "tmp"
 
 [proxy]
     enabled = true
-    proxy_port = 3000
+    proxy_port = 3030
     app_port = 8080
