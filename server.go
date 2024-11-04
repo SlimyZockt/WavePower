@@ -72,7 +72,7 @@ func main() {
 	)
 
 	authRouter := app.AuthenticatedRouter()
-	router.Handle("/", middleware.IsAuthenticated(authRouter))
+	router.Handle("/api/", http.StripPrefix("/api", middleware.IsAuthenticated(authRouter)))
 
 	server := http.Server{
 		Addr:    ":8080",

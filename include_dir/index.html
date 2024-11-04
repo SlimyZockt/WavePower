@@ -15,9 +15,10 @@
 <body class="flex flex-row-reverse min-h-screen">
     <div hx-post="/refresh_token" hx-trigger="every 30m" hx-swap="none"></div>
     <div class="flex-col flex bg-base-300 min-w-fit gap-2 p-2">
-        <button id="login" class="btn btn-neutral" hx-post="/loggedin" hx-swap="outerHTML" hx-trigger="load"> Login with
+        <button id="login" class="btn btn-neutral" hx-post="/api/loggedin" hx-swap="outerHTML" hx-trigger="load"> Login
+            with
             Google</button>
-        <div hx-trigger="load" hx-post="/playlist" hx-swap="outerHTML"></div>
+        <div hx-trigger="load" hx-post="/api/playlist" hx-swap="outerHTML"></div>
     </div>
     <div class="flex flex-col grow">
         <div class="flex justify-center items-center flex-grow bg-base-100">
@@ -69,7 +70,8 @@
             </div>
 
         </div>
-        <div class="flex justify-center bg-base-100 p-2" hx-post="/fileupload" hx-trigger="load" hx-swap="innerHTML">
+        <div class="flex justify-center bg-base-100 p-2" hx-post="/api/fileupload" hx-trigger="load"
+            hx-swap="innerHTML">
         </div>
     </div>
 </body>

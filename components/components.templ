@@ -1,50 +1,37 @@
 package components
 
 import (
-	"log"
-	"slices"
-	"github.com/markbates/goth"
+	"server/internal/user"
 )
 
-type Playlist []string
-
-var Songs Playlist = Playlist{"Lofi Beats", "Heavy Rock"}
-
-func (playlist Playlist) Move(from int, to int) {
-	temp := playlist[from]
-	playlist = slices.Delete(playlist, from, from+1)
-	playlist = slices.Insert(playlist, to, temp)
-}
-
-templ LoggedIn(user goth.User) {
+templ LoggedIn(user *user.User) {
 	<button class="btn btn-neutral" hx-get="/logout/google" hx-trigger="click" onclick="location.reload()">
 		{ user.Name }
 	</button>
 }
 
 templ FileUpload() {
-	<input type="file" class="file-input file-input-ghost file-input-bordered w-full max-w-xs"/>
+	<input id="fileuploud" type="file" class="file-input file-input-ghost file-input-bordered w-full max-w-xs" accept="audio/*" onchange="fileuploud_change(event)"/>
 }
 
-templ PlaylistCmp() {
-	<ul id="playlist" class="menu bg-base-300 rounded-box f:wlex-grow text-lg grow" hx-trigger="playlist-changed" hx-swap="outerHTML" hx-post="/playlist">
-		for _, val := range Songs {
+templ Playlist(user *user.User) {
+	<ul id="playlist" class="menu bg-base-300 rounded-box f:wlex-grow text-lg grow" hx-trigger="playlist-changed" hx-swap="outerHTML" hx-post="/api/playlist">
+		for _, val := range user.Playlists[0] {
 			<li>
-				@PlaylistyItem(val)
+				@PlaylistyItem(val.Name)
 			</li>
 		}
 	</ul>
 }
 
 templ PlaylistyItem(name string) {
-	<a class="btn z-10 flex gap-2" draggable="true" ondrop="drop(event)" ondragover="allowDrop(event)" id={ name } ondragstart="drag(event)">
-		<p class="cursor-grab">
-			::
-		</p>
-		<p class="grow">{ name }</p>
-	</a>
-}
-
-func helloWorld() {
-	log.Println("Hello World")
+	<div class="">
+		<a class="join-item z-1 join" draggable="true" ondrop="drop(event)" ondragover="allowDrop(event)" id={ name } ondragstart="drag(event)" onclick="onSelectSong(this.id)">
+			<p class="btn cursor-grab join-item">
+				::
+			</p>
+			<p class="btn grow join-item">{ name }</p>
+			<button type="button" class="btn btn-error join-item">🗑</button>
+		</a>
+	</div>
 }

@@ -135,3 +135,31 @@ volume.addEventListener("input", (e) => {
 time_line.addEventListener("input", (e) => {
   audio.currentTime = audio.duration * (e.target.value / 100);
 });
+
+//fileuploud.addEventListener("cancel", () => {});
+
+/**
+ * @param {Event}
+ */
+async function fileuploud_change(_) {
+  /**
+   * @type {HTMLInputElement} fileuploud
+   */
+  let fileuploud = document.getElementById("fileuploud");
+  let files = fileuploud.files;
+
+  if (files === null) return;
+
+  console.log(files);
+  let file = files[0];
+
+  console.log(file.name);
+
+  if (file === null) return;
+  await fetch(`api/upload/${file.name}`, {
+    body: file,
+    method: "POST",
+  });
+
+  htmx.trigger("#playlist", "playlist-changed", {});
+}

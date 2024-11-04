@@ -21,7 +21,7 @@ async function drop(e) {
     droped: e.target.id,
   });
 
-  await fetch("/moved", {
+  await fetch("/api/moved", {
     method: "POST",
     body: JSON.stringify({
       grabbed: data,
@@ -33,4 +33,18 @@ async function drop(e) {
 
   //console.log("moved");
   //
+}
+
+/**
+ * @param {Event} e
+ */
+async function onSelectSong(id) {
+  if (Hls.isSupported()) {
+    let hls = new Hls();
+    hls.loadSource(`api/audio/${id}`);
+    hls.attachMedia(audio);
+    hls.on(Hls.Events.MANIFEST_PARSED, function () {});
+  } else if (audio.canPlayType("application/vnd.apple.mpegurl")) {
+    audio.src = `api/audio/${id}`;
+  }
 }

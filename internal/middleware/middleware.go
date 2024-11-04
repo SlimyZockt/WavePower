@@ -74,7 +74,7 @@ func IsAuthenticated(next http.Handler) http.Handler {
 
 		userSession, ok := routes.Sessions[token]
 		if !ok {
-			log.Println("Not OK")
+			log.Println("No Session")
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(http.StatusText(http.StatusBadRequest)))
 			return
@@ -87,6 +87,7 @@ func IsAuthenticated(next http.Handler) http.Handler {
 			return
 		}
 
+		log.Println("OK")
 		next.ServeHTTP(w, r)
 	})
 }
