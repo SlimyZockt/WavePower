@@ -180,10 +180,10 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 		droped_id := 0
 		grabbed_id := 0
 		for i, val := range user.Playlists[0] {
-			if val.Name == data.Grabbed {
+			if strconv.Itoa(val.Id) == data.Grabbed {
 				grabbed_id = i
 			}
-			if val.Name == data.Droped {
+			if strconv.Itoa(val.Id) == data.Droped {
 				droped_id = i
 			}
 		}
@@ -240,13 +240,15 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 		temp := strings.Split(filename, ".")
 		onlyFilename := strings.Join(temp[:len(temp)-1], ".")
 
-		if slices.Contains(cUser.Playlists[0], user.Song{Name: onlyFilename}) {
+		audioData := user.AudioTrack{Name: onlyFilename, Id: len(cUser.Playlists[0])}
+
+		if slices.Contains(cUser.Playlists[0], audioData) {
 			return errors.New("Song allready exist")
 		}
 
 		out_dir := filepath.Join(
 			executable_dir,
-			fmt.Sprintf("/uploads/%s/%s", cUser.UserID, onlyFilename),
+			fmt.Sprintf("/uploads/%s/%d", cUser.UserID, audioData.Id),
 		)
 
 		err = os.MkdirAll(out_dir, os.ModeDir)
@@ -272,7 +274,7 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 			return err
 		}
 
-		song := user.Song{
+		song := user.AudioTrack{
 			Name: onlyFilename,
 		}
 
@@ -326,22 +328,20 @@ func (app *App) Router() *http.ServeMux {
 
 	static_fs := http.FileServer(http.Dir("./include_dir/"))
 
-	// router.Handle("/assets", static_fs)
-
-	router.HandleFunc("GET /audio/{name}", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
-
-		name := r.PathValue("name")
-
-		req, err := http.NewRequest("POST", fmt.Sprintf("/audio/%s", name), nil)
-
-		if err != nil {
-			return err
-		}
-
-		io.Copy(w, req.Body)
-
-		return nil
-	}))
+	// router.HandleFunc("GET /audio/{hash}", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+	//
+	// 	name := r.PathValue("hash")
+	//
+	// 	req, err := http.NewRequest("POST", fmt.Sprintf("/audio/%s", name), nil)
+	//
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	//
+	// 	io.Copy(w, req.Body)
+	//
+	// 	return nil
+	// }))
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
@@ -362,7 +362,7 @@ func (app *App) Router() *http.ServeMux {
 
 		new_user := user.User{
 			User:      gUser,
-			Playlists: []user.Playlist{[]user.Song{}},
+			Playlists: []user.Playlist{[]user.AudioTrack{}},
 		}
 
 		new_user.User.Name = strings.Split(new_user.Email, "@")[0]

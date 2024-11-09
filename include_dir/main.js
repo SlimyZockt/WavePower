@@ -47,27 +47,15 @@ time_left.innerText = "00:00 / 00:00";
  */
 let login = document.getElementById("login");
 
-login.onclick = async () => {
+login.onclick = () => {
   window.location.href = "/auth/google";
-  console.log(req);
 };
 
 let is_playing = false;
 let last_tracked_volume = audio.volume;
 let is_muted = false;
 
-if (Hls.isSupported()) {
-  let hls = new Hls();
-  hls.loadSource("assets/lofi/output.m3u8");
-  hls.attachMedia(audio);
-  hls.on(Hls.Events.MANIFEST_PARSED, function () {});
-}
-// hls.js is not supported on platforms that do not have Media Source Extensions (MSE) enabled.
-// When the browser has built-in HLS support (check using `canPlayType`), we can provide an HLS manifest (i.e. .m3u8 URL) directly to the video element throught the `src` property.
-// This is using the built-in support of the plain video element, without using hls.js.
-else if (audio.canPlayType("application/vnd.apple.mpegurl")) {
-  audio.src = "assets/lofi/output.m3u8";
-}
+loadAudio("assets/lofi/output.m3u8", false);
 
 play_btn.addEventListener("click", () => {
   if (!is_playing) {
@@ -98,11 +86,15 @@ function display_time(time_s) {
   );
 }
 
-audio.addEventListener("loadedmetadata", () => {
+audio.addEventListener("loadeddata", () => {
+  console.log(audio.duration);
   time_left.innerText = `${display_time(audio.currentTime)} / ${display_time(audio.duration)}`;
 });
 
 audio.addEventListener("timeupdate", () => {
+  if (Number.isNaN(audio.duration)) return;
+
+  console.log(audio.duration);
   time_line.value = `${(audio.currentTime / audio.duration) * 100}`;
   time_left.innerText = `${display_time(audio.currentTime)} / ${display_time(audio.duration)}`;
 });
@@ -112,6 +104,7 @@ mute_btn.addEventListener("click", () => {
     mute_btn.innerHTML = UN_MUTE_ICON;
     audio.volume = last_tracked_volume;
     volume.value = last_tracked_volume * 100;
+    time_left.innerText = "00:00 / 00:00";
     is_muted = false;
     return;
   }
@@ -132,7 +125,7 @@ volume.addEventListener("input", (e) => {
   audio.volume = e.target.value / 100;
 });
 
-time_line.addEventListener("input", (e) => {
+time_line.addEventListener("mouseup", (e) => {
   audio.currentTime = audio.duration * (e.target.value / 100);
 });
 
@@ -162,4 +155,39 @@ async function fileuploud_change(_) {
   });
 
   htmx.trigger("#playlist", "playlist-changed", {});
+}
+
+/**
+ * @param {string} src
+ * @param {boolean} autoplay
+ */
+async function loadAudio(src, autoplay) {
+  if (Hls.isSupported()) {
+    let hls = new Hls();
+    hls.loadSource(src);
+    hls.attachMedia(audio);
+    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+      time_line.value = "0";
+      audio.currentTime = 0;
+    });
+  } else if (audio.canPlayType("application/vnd.apple.mpegurl")) {
+    audio.src = src;
+  }
+
+  audio.autoplay = autoplay;
+  if (autoplay) {
+    play_btn.innerHTML = PAUSE_ICON;
+    is_playing = true;
+    return;
+  }
+  play_btn.innerHTML = PLAY_ICON;
+  is_playing = false;
+}
+
+/**
+ * @param {string} id
+ */
+function onSelectAudio(id) {
+  let src = `api/audio/${id}/output.m3u8`;
+  loadAudio(src, true);
 }

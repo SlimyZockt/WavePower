@@ -6,26 +6,25 @@ function allowDrop(e) {
   e.preventDefault();
 }
 /**
- *@param {DragEvent} e
+ *@param {Number} id
  */
-async function drop(e) {
+async function drop(e, id) {
   e.preventDefault();
   let data = e.dataTransfer.getData("s_name");
 
-  if (data === "" || e.target.id === "") {
-    return;
-  }
-
   console.table({
     grabbed: data,
-    droped: e.target.id,
+    droped: id,
   });
+  if (data === "" || id === "") {
+    return;
+  }
 
   await fetch("/api/moved", {
     method: "POST",
     body: JSON.stringify({
       grabbed: data,
-      droped: e.target.id,
+      droped: id,
     }),
   });
 
@@ -33,18 +32,4 @@ async function drop(e) {
 
   //console.log("moved");
   //
-}
-
-/**
- * @param {Event} e
- */
-async function onSelectSong(id) {
-  if (Hls.isSupported()) {
-    let hls = new Hls();
-    hls.loadSource(`api/audio/${id}`);
-    hls.attachMedia(audio);
-    hls.on(Hls.Events.MANIFEST_PARSED, function () {});
-  } else if (audio.canPlayType("application/vnd.apple.mpegurl")) {
-    audio.src = `api/audio/${id}`;
-  }
 }

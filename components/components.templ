@@ -2,11 +2,15 @@ package components
 
 import (
 	"server/internal/user"
+	"fmt"
+	"strconv"
 )
 
 templ LoggedIn(user *user.User) {
-	<button class="btn btn-neutral" hx-get="/logout/google" hx-trigger="click" onclick="location.reload()">
-		{ user.Name }
+	<button class="btn btn-neutral min-w-0 shrink w-full" hx-get="/logout/google" hx-trigger="click" onclick="location.reload()">
+		<p class="truncate">
+			{ user.Name }
+		</p>
 	</button>
 }
 
@@ -15,23 +19,39 @@ templ FileUpload() {
 }
 
 templ Playlist(user *user.User) {
-	<ul id="playlist" class="menu bg-base-300 rounded-box f:wlex-grow text-lg grow" hx-trigger="playlist-changed" hx-swap="outerHTML" hx-post="/api/playlist">
-		for _, val := range user.Playlists[0] {
-			<li>
-				@PlaylistyItem(val.Name)
-			</li>
-		}
-	</ul>
+	@LoggedIn(user)
+	for _, val := range user.Playlists[0] {
+		@PlaylistyItem(val.Name, strconv.Itoa(val.Id))
+	}
 }
 
-templ PlaylistyItem(name string) {
-	<div class="">
-		<a class="join-item z-1 join" draggable="true" ondrop="drop(event)" ondragover="allowDrop(event)" id={ name } ondragstart="drag(event)" onclick="onSelectSong(this.id)">
+func shorterName(name string, maxLength int) string {
+	if len(name) <= maxLength {
+		return name
+	}
+
+	return fmt.Sprintf("%s...", name[:(maxLength-3)])
+}
+
+/*
+HACK: THIS IS FUCKING STUPID
+HACK: creates a Script Tag to use main script function
+*/
+
+script onSelectAudio(id string) {
+	onSelectAudio(id)
+}
+
+templ PlaylistyItem(name string, id string) {
+	<div class="z-10" draggable="true" ondrop="drop(event, this.id)" ondragover="allowDrop(event)" id={ id } ondragstart="drag(event)">
+		<a class="join  min-w-0 shrink w-full" onclick={ onSelectAudio(id) }>
 			<p class="btn cursor-grab join-item">
 				::
 			</p>
-			<p class="btn grow join-item">{ name }</p>
-			<button type="button" class="btn btn-error join-item">🗑</button>
+			<button class="btn join-item min-w-0 shrink w-full">
+				<p class="truncate">{ name } </p>
+			</button>
+			<button type="button" class="btn btn-error join-item" hx-post={ "delete/" + id } hx-target={ "#" + id } hx-swap="outer-html">🗑</button>
 		</a>
 	</div>
 }

@@ -2,7 +2,7 @@ templ:
 	@templ generate -watch --proxy="http://localhost:8080"
 
 tailwind:
-	@npx tailwindcss -o .\include_dir\output.css --watch
+	./tailwindcss.exe -o .\include_dir\output.css --watch
 
 install:
 	@go install github.com/a-h/templ/cmd/templ@latest
