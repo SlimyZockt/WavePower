@@ -1,5 +1,7 @@
 templ:
-	@templ generate -watch --proxy="http://localhost:8080"
+	@templ generate -watch 
+
+# --proxy="http://localhost:8080"
 
 tailwind:
 	./tailwindcss.exe -o .\include_dir\output.css --watch
@@ -18,3 +20,7 @@ air:
 dev: 
 	make -j 3 templ tailwind air
 
+
+refresh_db:
+	goose -dir=assets\migrations\ sqlite3 app.db down
+	goose -dir=assets\migrations\ sqlite3 app.db up

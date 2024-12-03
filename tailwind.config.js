@@ -1,4 +1,5 @@
 import daisyui from "daisyui";
+import { addIconSelectors } from "@iconify/tailwind";
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -6,7 +7,7 @@ module.exports = {
   theme: {
     extend: {},
   },
-  plugins: [daisyui],
+  plugins: [daisyui, addIconSelectors(["tabler"])],
   daisyui: {
     themes: ["light", "dark", "business"],
     darkTheme: "business",

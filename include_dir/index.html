@@ -12,52 +12,53 @@
     <link rel="stylesheet" href="output.css">
 </head>
 
-<body class="grid grid-cols-[1fr_auto] grid-rows-none h-screen">
+<body class="text-base grid grid-cols-[1fr_auto] grid-rows-none h-screen">
     <div class="flex flex-col justify-center items-center">
         <!-- Audio Player -->
         <div class="grow flex justify-center items-center">
             <div hx-post="/refresh_token" hx-trigger="every 30m" hx-swap="none"></div>
             <div class="flex flex-col gap-3">
                 <div class="flex flex-row justify-between gap-2 items-end">
-                    <div class="grow">
+                    <div class="grow" id="track-display" hx-post="/api/track_display" hx-trigger="track-loaded, load"
+                        hx-swap="innerHTML">
                         <p class="font-bold text-lg">Lofi Beats</p>
                         <p>Chill Vibes</p>
                     </div>
-                    <button class="btn btn-ghost btn-square rounded-lg btn-xs">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-                            <path fill="currentColor"
-                                d="M237.66 178.34a8 8 0 0 1 0 11.32l-24 24A8 8 0 0 1 200 208v-16a72.15 72.15 0 0 1-57.65-30.14l-41.72-58.4A56.1 56.1 0 0 0 55.06 80H32a8 8 0 0 1 0-16h23.06a72.12 72.12 0 0 1 58.59 30.15l41.72 58.4A56.08 56.08 0 0 0 200 176v-16a8 8 0 0 1 13.66-5.66ZM143 107a8 8 0 0 0 11.16-1.86l1.2-1.67A56.08 56.08 0 0 1 200 80v16a8 8 0 0 0 13.66 5.66l24-24a8 8 0 0 0 0-11.32l-24-24A8 8 0 0 0 200 48v16a72.15 72.15 0 0 0-57.65 30.14l-1.2 1.67A8 8 0 0 0 143 107m-30 42a8 8 0 0 0-11.16 1.86l-1.2 1.67A56.1 56.1 0 0 1 55.06 176H32a8 8 0 0 0 0 16h23.06a72.12 72.12 0 0 0 58.59-30.15l1.2-1.67A8 8 0 0 0 113 149" />
-                        </svg>
-                    </button>
-                    <button class="btn btn-ghost btn-square rounded-lg btn-xs">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-                            <path fill="currentColor"
-                                d="M24 128a72.08 72.08 0 0 1 72-72h108.69l-10.35-10.34a8 8 0 0 1 11.32-11.32l24 24a8 8 0 0 1 0 11.32l-24 24a8 8 0 0 1-11.32-11.32L204.69 72H96a56.06 56.06 0 0 0-56 56a8 8 0 0 1-16 0m200-8a8 8 0 0 0-8 8a56.06 56.06 0 0 1-56 56H51.31l10.35-10.34a8 8 0 0 0-11.32-11.32l-24 24a8 8 0 0 0 0 11.32l24 24a8 8 0 0 0 11.32-11.32L51.31 200H160a72.08 72.08 0 0 0 72-72a8 8 0 0 0-8-8" />
-                        </svg>
-                    </button>
+                    <label class="swap btn btn-ghost btn-square rounded-lg btn-sm" class="shuffle">
+                        <input type="checkbox" />
+                        <div class="swap-on ">
+                            <span class="iconify tabler--arrows-shuffle w-6 h-6 text-accent"></span>
+                        </div>
+                        <div class="swap-off">
+                            <span class="iconify tabler--arrows-shuffle w-6 h-6 "></span>
+                        </div>
+                    </label>
+                    <label class="swap btn btn-ghost btn-square rounded-lg btn-sm" class="repeat">
+                        <input type="checkbox" />
+                        <div class="swap-on ">
+                            <span class="iconify tabler--repeat-off w-6 h-6 text-accent"></span>
+                        </div>
+                        <div class="swap-off">
+                            <span class="iconify tabler--repeat  w-6 h-6"></span>
+                        </div>
+                    </label>
                 </div>
                 <div class="flex flex-row justify-between gap-2">
-                    <button class="btn btn-ghost btn-square rounded-lg btn-xs">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-                            <path fill="currentColor"
-                                d="M199.81 34a16 16 0 0 0-16.24.43L64 109.23V40a8 8 0 0 0-16 0v176a8 8 0 0 0 16 0v-69.23l119.57 74.78A15.95 15.95 0 0 0 208 208.12V47.88A15.86 15.86 0 0 0 199.81 34M192 208L64.16 128L192 48.07Z" />
-                        </svg>
+                    <button class="btn btn-ghost btn-square rounded-lg btn-sm" id="backward">
+                        <span class="iconify tabler--player-skip-back w-6 h-6"></span>
                     </button>
-                    <button id="play-btn" class="btn btn-ghost btn-square rounded-lg btn-xs"></button>
-                    <button class="btn btn-ghost btn-square rounded-lg btn-xs">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-                            <path fill="currentColor"
-                                d="M200 32a8 8 0 0 0-8 8v69.23L72.43 34.45A15.95 15.95 0 0 0 48 47.88v160.24a16 16 0 0 0 24.43 13.43L192 146.77V216a8 8 0 0 0 16 0V40a8 8 0 0 0-8-8M64 207.93V48.05l127.84 80Z" />
-                        </svg>
+                    <button id="play-btn" class="btn btn-ghost btn-square rounded-lg btn-sm"></button>
+                    <button class="btn btn-ghost btn-square rounded-lg btn-sm" id="forward">
+                        <span class="iconify tabler--player-skip-forward w-6 h-6"></span>
                     </button>
-                    <div id="time-left" class="flex justify-end items-center font-semibold text-sm font-mono"></div>
+                    <div id="time-left" class="flex justify-end items-center font-semibold font-mono"></div>
                 </div>
                 <div>
                     <input id="time-line" type="range" min="0" max="100" value="0"
                         class="range range-secondary range-xs accent-black" />
                 </div>
-                <div class="flex flex-row gap-2 ">
-                    <button class="btn btn-ghost btn-square rounded-lg btn-xs" id="mute-btn">
+                <div class="flex flex-row gap-2 items-center">
+                    <button class="btn btn-ghost btn-square rounded-lg btn-sm" id="mute-btn">
                     </button>
                     <input type="range" min="0" max="100" value="40" class="range progress range-xs" id="volume" />
                 </div>
@@ -70,7 +71,7 @@
             hx-swap="innerHTML">
         </div>
     </div>
-    <div class="bg-base-300 p-2 min-w-32 max-w-[2/5] flex flex-col gap-2" hx-post="/api/playlist" hx-swap="innerHTML"
+    <div class="bg-base-300 p-2 flex flex-col gap-2" hx-post="/api/playlist" hx-swap="innerHTML"
         hx-trigger="load, playlist-changed" id="playlist">
         <button id="login" class="btn btn-neutral min-w-0 shrink w-full">
             <p class="truncate">

@@ -1,80 +1,108 @@
 "use strict";
 
-const PLAY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><path fill="currentColor" d="M232.4 114.49L88.32 26.35a16 16 0 0 0-16.2-.3A15.86 15.86 0 0 0 64 39.87v176.26A15.94 15.94 0 0 0 80 232a16.07 16.07 0 0 0 8.36-2.35l144.04-88.14a15.81 15.81 0 0 0 0-27ZM80 215.94V40l143.83 88Z"/></svg>`;
-const PAUSE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><path fill="currentColor" d="M200 32h-40a16 16 0 0 0-16 16v160a16 16 0 0 0 16 16h40a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16m0 176h-40V48h40ZM96 32H56a16 16 0 0 0-16 16v160a16 16 0 0 0 16 16h40a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16m0 176H56V48h40Z"/></svg>`;
+const PLAY_ICON = `<span class="iconify tabler--player-play w-6 h-6"></span>`;
+const PAUSE_ICON = `<span class="iconify tabler--player-pause w-6 h-6"></span>`;
 
-const UN_MUTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 14.959V9.04C2 8.466 2.448 8 3 8h3.586a.98.98 0 0 0 .707-.305l3-3.388c.63-.656 1.707-.191 1.707.736v13.914c0 .934-1.09 1.395-1.716.726l-2.99-3.369A.98.98 0 0 0 6.578 16H3c-.552 0-1-.466-1-1.041M16 8.5c1.333 1.778 1.333 5.222 0 7M19 5c3.988 3.808 4.012 10.217 0 14"></path></svg>`;
+const VOLUME_ICON = `<span class="iconify tabler--volume-off w-6 h-6"></span>`;
 
-const MUTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path d="m22 15l-6-6m6 0l-6 6"></path><path stroke-linejoin="round" d="M2 14.959V9.04C2 8.466 2.448 8 3 8h3.586a.98.98 0 0 0 .707-.305l3-3.388c.63-.656 1.707-.191 1.707.736v13.914c0 .934-1.09 1.395-1.716.726l-2.99-3.369A.98.98 0 0 0 6.578 16H3c-.552 0-1-.466-1-1.041"></path></g></svg>`;
-
-/**
- * @type {HTMLButtonElement}
- */
-let play_btn = document.getElementById("play-btn");
-play_btn.innerHTML = PLAY_ICON;
+const VOLUME_OFF_ICON = `<span class="iconify tabler--volume w-6 h-6"></span>`;
 
 /**
  * @type {HTMLButtonElement}
  */
-let mute_btn = document.getElementById("mute-btn");
-mute_btn.innerHTML = UN_MUTE_ICON;
+const PLAY_BTN = document.getElementById("play-btn");
+PLAY_BTN.innerHTML = PLAY_ICON;
+
+/**
+ * @type {HTMLButtonElement}
+ */
+const MUTE_BTN = document.getElementById("mute-btn");
+MUTE_BTN.innerHTML = VOLUME_OFF_ICON;
 
 /**
  * @type {HTMLAudioElement}
  */
-let audio = document.getElementById("audio");
-audio.volume = 0.5;
+const AUDIO = document.getElementById("audio");
+AUDIO.volume = 0.5;
 
 /**
  * @type {HTMLInputElement}
  */
-let time_line = document.getElementById("time-line");
+const TIME_LINE = document.getElementById("time-line");
 
 /**
  * @type {HTMLInputElement}
  */
-let volume = document.getElementById("volume");
-volume.value = audio.volume * 100;
+const VOLUME = document.getElementById("volume");
+VOLUME.value = AUDIO.volume * 100;
 
 /**
  * @type {HTMLDivElement}
  */
-let time_left = document.getElementById("time-left");
-time_left.innerText = "00:00 / 00:00";
+const TIME_LEFT = document.getElementById("time-left");
+TIME_LEFT.innerText = "00:00 / 00:00";
 
 /**
  * @type {HTMLButtonElement}
  */
-let login = document.getElementById("login");
+const LOGIN = document.getElementById("login");
 
-login.onclick = () => {
+/**
+ * @type {HTMLButtonElement}
+ */
+const FORWARD = document.getElementById("forward");
+
+/**
+ * @type {HTMLButtonElement}
+ */
+const BACKWARD = document.getElementById("backward");
+
+LOGIN.onclick = () => {
   window.location.href = "/auth/google";
 };
 
 let is_playing = false;
-let last_tracked_volume = audio.volume;
+let last_tracked_volume = AUDIO.volume;
 let is_muted = false;
+let curAudioID = -1;
+
+/**
+ * @type {HTMLDivElement | null}
+ */
+let pl_item_play_btn = null;
+
+FORWARD.addEventListener("click", () => {
+  AUDIO.currentTime = AUDIO.duration;
+});
 
 loadAudio("assets/lofi/output.m3u8", false);
 
-play_btn.addEventListener("click", () => {
+function togglePlayer() {
   if (!is_playing) {
-    play_btn.innerHTML = PAUSE_ICON;
-    audio.play();
+    PLAY_BTN.innerHTML = PAUSE_ICON;
+    if (pl_item_play_btn !== null) {
+      pl_item_play_btn.innerHTML = PAUSE_ICON;
+    }
+    AUDIO.play();
     is_playing = true;
     return;
   }
 
-  play_btn.innerHTML = PLAY_ICON;
-  audio.pause();
+  PLAY_BTN.innerHTML = PLAY_ICON;
+  if (pl_item_play_btn !== null) {
+    pl_item_play_btn.innerHTML = PLAY_ICON;
+  }
+  AUDIO.pause();
   is_playing = false;
-});
+}
+
+PLAY_BTN.addEventListener("click", togglePlayer);
 
 /**
  * @param {Number} time_s
  * @returns {string}
  */
-function display_time(time_s) {
+function displayTime(time_s) {
   const hours = Math.floor(time_s / 3600);
   time_s = time_s - hours * 3600;
   const minutes = Math.floor(time_s / 60);
@@ -86,55 +114,63 @@ function display_time(time_s) {
   );
 }
 
-audio.addEventListener("loadeddata", () => {
-  console.log(audio.duration);
-  time_left.innerText = `${display_time(audio.currentTime)} / ${display_time(audio.duration)}`;
+let tl_pressed = false;
+TIME_LINE.addEventListener("mousedown", () => {
+  tl_pressed = true;
 });
 
-audio.addEventListener("timeupdate", () => {
-  if (Number.isNaN(audio.duration)) return;
-
-  console.log(audio.duration);
-  time_line.value = `${(audio.currentTime / audio.duration) * 100}`;
-  time_left.innerText = `${display_time(audio.currentTime)} / ${display_time(audio.duration)}`;
+TIME_LINE.addEventListener("mouseup", (e) => {
+  AUDIO.currentTime = AUDIO.duration * (e.target.value / 100);
+  tl_pressed = false;
 });
 
-mute_btn.addEventListener("click", () => {
+AUDIO.addEventListener("loadeddata", () => {
+  TIME_LEFT.innerText = `${displayTime(AUDIO.currentTime)} / ${displayTime(AUDIO.duration)}`;
+});
+
+AUDIO.addEventListener("timeupdate", () => {
+  if (Number.isNaN(AUDIO.duration)) return;
+  if (tl_pressed === true) return;
+  TIME_LINE.value = `${(AUDIO.currentTime / AUDIO.duration) * 100}`;
+  TIME_LEFT.innerText = `${displayTime(AUDIO.currentTime)} / ${displayTime(AUDIO.duration)}`;
+});
+
+AUDIO.addEventListener("ended", () => {
+  const src = `api/audio/${curAudioID + 1}/output.m3u8`;
+  loadAudio(src, true, curAudioID + 1);
+});
+
+MUTE_BTN.addEventListener("click", () => {
   if (is_muted) {
-    mute_btn.innerHTML = UN_MUTE_ICON;
-    audio.volume = last_tracked_volume;
-    volume.value = last_tracked_volume * 100;
-    time_left.innerText = "00:00 / 00:00";
+    MUTE_BTN.innerHTML = VOLUME_OFF_ICON;
+    AUDIO.volume = last_tracked_volume;
+    VOLUME.value = last_tracked_volume * 100;
+    TIME_LEFT.innerText = "00:00 / 00:00";
     is_muted = false;
     return;
   }
 
-  mute_btn.innerHTML = MUTE_ICON;
-  last_tracked_volume = audio.volume;
-  audio.volume = 0.0;
-  volume.value = 0.0;
+  MUTE_BTN.innerHTML = VOLUME_ICON;
+  last_tracked_volume = AUDIO.volume;
+  AUDIO.volume = 0.0;
+  VOLUME.value = 0.0;
   is_muted = true;
 });
 
-volume.addEventListener("input", (e) => {
+VOLUME.addEventListener("input", (e) => {
   if (is_muted) {
-    mute_btn.innerHTML = UN_MUTE_ICON;
+    MUTE_BTN.innerHTML = VOLUME_OFF_ICON;
     is_muted = false;
   }
 
-  audio.volume = e.target.value / 100;
+  AUDIO.volume = e.target.value / 100;
 });
-
-time_line.addEventListener("mouseup", (e) => {
-  audio.currentTime = audio.duration * (e.target.value / 100);
-});
-
-//fileuploud.addEventListener("cancel", () => {});
 
 /**
  * @param {Event}
  */
-async function fileuploud_change(_) {
+// eslint-disable-next-line
+async function fileuploud_change() {
   /**
    * @type {HTMLInputElement} fileuploud
    */
@@ -154,40 +190,80 @@ async function fileuploud_change(_) {
     method: "POST",
   });
 
+  // eslint-disable-next-line
   htmx.trigger("#playlist", "playlist-changed", {});
 }
 
 /**
  * @param {string} src
  * @param {boolean} autoplay
+ * @param {string} id
  */
-async function loadAudio(src, autoplay) {
+async function loadAudio(src, autoplay, id) {
+  curAudioID = id;
+
+  // eslint-disable-next-line
   if (Hls.isSupported()) {
+    // eslint-disable-next-line
     let hls = new Hls();
     hls.loadSource(src);
-    hls.attachMedia(audio);
+    hls.attachMedia(AUDIO);
+    // eslint-disable-next-line
     hls.on(Hls.Events.MANIFEST_PARSED, function () {
-      time_line.value = "0";
-      audio.currentTime = 0;
+      TIME_LINE.value = "0";
+      AUDIO.currentTime = 0;
     });
-  } else if (audio.canPlayType("application/vnd.apple.mpegurl")) {
-    audio.src = src;
+  } else if (AUDIO.canPlayType("application/vnd.apple.mpegurl")) {
+    AUDIO.src = src;
   }
 
-  audio.autoplay = autoplay;
+  AUDIO.autoplay = autoplay;
+
   if (autoplay) {
-    play_btn.innerHTML = PAUSE_ICON;
+    PLAY_BTN.innerHTML = PAUSE_ICON;
     is_playing = true;
+
+    if (pl_item_play_btn !== null) {
+      pl_item_play_btn.innerHTML = PLAY_ICON;
+    }
+
+    pl_item_play_btn = document.getElementById(`pl-p-${id}`);
+    if (pl_item_play_btn !== null) {
+      pl_item_play_btn.innerHTML = PAUSE_ICON;
+    }
     return;
   }
-  play_btn.innerHTML = PLAY_ICON;
+  PLAY_BTN.innerHTML = PLAY_ICON;
   is_playing = false;
 }
+
+const TRACK_DISPLAY = document.getElementById("track-display");
 
 /**
  * @param {string} id
  */
 function onSelectAudio(id) {
-  let src = `api/audio/${id}/output.m3u8`;
-  loadAudio(src, true);
+  const src = `api/audio/${id}/output.m3u8`;
+
+  fetch(`/api/track_display/${id}`, {
+    method: "POST",
+  })
+    .catch(() => "")
+    .then(async (res) => {
+      TRACK_DISPLAY.innerHTML = await res.text();
+    });
+
+  loadAudio(src, true, id);
+}
+
+/**
+ * @param {string} id
+ */
+// eslint-disable-next-line
+function togglePlayerPLI(id) {
+  if (id === curAudioID) {
+    togglePlayer();
+  } else {
+    onSelectAudio(id);
+  }
 }

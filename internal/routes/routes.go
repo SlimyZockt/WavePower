@@ -1,13 +1,18 @@
 package routes
 
 import (
+	"bufio"
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log"
+	"maps"
+	"math/rand/v2"
 	"net/http"
 	"os"
 	"os/exec"
@@ -72,14 +77,21 @@ func (app *App) getUser(r *http.Request) (*user.User, error) {
 	return &user, nil
 }
 
-func (app *App) setUser(r *http.Request, user user.User) error {
+func (app *App) setUser(r *http.Request, user *user.User) error {
 	cookie, err := r.Cookie("session_token")
 	if err != nil {
 		return errors.New("Cookie not found")
 	}
 	token := cookie.Value
 
-	Sessions[token] = user
+	json_playlist, err := json.Marshal(user.Tracks)
+
+	_, err = app.DB.Exec("UPDATE users SET playlist = ? WHERE ID = ?", string(json_playlist), user.UserID)
+	if err != nil {
+		return err
+	}
+
+	Sessions[token] = *user
 
 	return nil
 }
@@ -87,13 +99,20 @@ func (app *App) setUser(r *http.Request, user user.User) error {
 func (app *App) AuthenticatedRouter() *http.ServeMux {
 	router := http.NewServeMux()
 
-	router.HandleFunc("GET /test", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello")
-	})
+	router.HandleFunc("GET /audio/{id}/", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+		id := r.PathValue("id")
 
-	router.HandleFunc("GET /audio/", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+		if id == "" {
+			return errors.New("No ID given")
+		}
 
 		cUser, err := app.getUser(r)
+		if err != nil {
+			return err
+		}
+
+		cUser.CurAudioID = id
+		err = app.setUser(r, cUser)
 		if err != nil {
 			return err
 		}
@@ -103,15 +122,82 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 
 		audio_dir := filepath.Join(
 			executable_dir,
-			fmt.Sprintf("/uploads/%s", cUser.UserID),
+			fmt.Sprintf("/uploads/%s/%s", cUser.UserID, id),
 		)
 
 		if _, err := os.Stat(audio_dir); !os.IsNotExist(err) {
 			fs := http.FileServer(http.Dir(audio_dir))
 
-			http.StripPrefix("/audio/", fs).ServeHTTP(w, r)
+			http.StripPrefix("/audio/"+id+"/", fs).ServeHTTP(w, r)
 		}
 
+		return nil
+	}))
+
+	router.HandleFunc("POST /next_track/shuffle", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+		cUser, err := app.getUser(r)
+		if err != nil {
+			return err
+		}
+		rnd := rand.IntN(len(cUser.Tracks))
+
+		fmt.Fprintf(w, "%s", cUser.Tracks[rnd].Id)
+		return nil
+	}))
+
+	router.HandleFunc("POST /next_track/{id}", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+		id := r.PathValue("id")
+		cUser, err := app.getUser(r)
+		if err != nil {
+			return err
+		}
+
+		idx := 0
+		for i, val := range cUser.Tracks {
+			if val.Id == id {
+				if i == len(cUser.Tracks)-1 {
+					idx = 0
+					break
+				}
+				idx = i + 1
+				break
+			}
+		}
+
+		fmt.Fprint(w, cUser.Tracks[idx])
+		return nil
+
+	}))
+
+	router.HandleFunc("POST /track_display", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+		cUser, err := app.getUser(r)
+		if err != nil {
+			return err
+		}
+
+		track, err := cUser.Tracks.GetTrack(cUser.CurAudioID)
+		if err != nil {
+			return err
+		}
+
+		components.TrackDisplay(track).Render(r.Context(), w)
+		return nil
+	}))
+
+	router.HandleFunc("POST /track_display/{id}", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+		id := r.PathValue("id")
+
+		cUser, err := app.getUser(r)
+		if err != nil {
+			return err
+		}
+
+		track, err := cUser.Tracks.GetTrack(id)
+		if err != nil {
+			return err
+		}
+
+		components.TrackDisplay(track).Render(r.Context(), w)
 		return nil
 	}))
 
@@ -124,7 +210,7 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 
 		user.ExpiresAt = user.ExpiresAt.Add(time.Hour)
 
-		_ = app.setUser(r, *user)
+		_ = app.setUser(r, user)
 
 		return nil
 	}))
@@ -153,7 +239,7 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 	}))
 
 	router.HandleFunc("POST /moved", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
-		user, err := app.getUser(r)
+		cUser, err := app.getUser(r)
 		if err != nil {
 			return err
 		}
@@ -179,28 +265,52 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 
 		droped_id := 0
 		grabbed_id := 0
-		for i, val := range user.Playlists[0] {
-			if strconv.Itoa(val.Id) == data.Grabbed {
+		for i, val := range cUser.Tracks {
+			if val.Id == data.Grabbed {
 				grabbed_id = i
 			}
-			if strconv.Itoa(val.Id) == data.Droped {
+			if val.Id == data.Droped {
 				droped_id = i
 			}
 		}
 
-		user.Playlists[0].Move(grabbed_id, droped_id)
+		cUser.Tracks.Move(grabbed_id, droped_id)
 
-		json_playlist, err := json.Marshal(user.Playlists)
-
-		_, err = app.DB.Exec("UPDATE users SET playlist = ? WHERE ID = ?", string(json_playlist), user.UserID)
-		if err != nil {
-			return err
-		}
+		app.setUser(r, cUser)
 
 		return nil
 	}))
 
 	router.Handle("POST /fileupload", templ.Handler(components.FileUpload()))
+
+	router.HandleFunc("POST /delete/{id}", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+		id := r.PathValue("id")
+
+		executable_path, err := os.Executable()
+		executable_dir := filepath.Dir(executable_path)
+
+		cUser, err := app.getUser(r)
+		if err != nil {
+			return err
+		}
+
+		index := -1
+		for i, val := range cUser.Tracks {
+			if val.Id == id {
+				index = i
+				os.RemoveAll(filepath.Join(
+					executable_dir,
+					fmt.Sprintf("/uploads/%s/%s", cUser.UserID, cUser.Tracks[i].Id)),
+				)
+				break
+			}
+		}
+
+		cUser.Tracks = slices.Delete(cUser.Tracks, index, index+1)
+
+		app.setUser(r, cUser)
+		return nil
+	}))
 
 	router.HandleFunc("POST /upload/{name}", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
 		bytes, err := io.ReadAll(r.Body)
@@ -240,15 +350,19 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 		temp := strings.Split(filename, ".")
 		onlyFilename := strings.Join(temp[:len(temp)-1], ".")
 
-		audioData := user.AudioTrack{Name: onlyFilename, Id: len(cUser.Playlists[0])}
+		hash := sha256.New()
+		hash.Write(bytes)
+		sha := base64.URLEncoding.EncodeToString(hash.Sum(nil))
 
-		if slices.Contains(cUser.Playlists[0], audioData) {
-			return errors.New("Song allready exist")
+		trackData := user.AudioTrack{Title: onlyFilename, Id: sha}
+
+		if slices.Contains(cUser.Tracks, trackData) {
+			return errors.New("Track allready exist")
 		}
 
 		out_dir := filepath.Join(
 			executable_dir,
-			fmt.Sprintf("/uploads/%s/%d", cUser.UserID, audioData.Id),
+			fmt.Sprintf("/uploads/%s/%s", cUser.UserID, trackData.Id),
 		)
 
 		err = os.MkdirAll(out_dir, os.ModeDir)
@@ -274,18 +388,36 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 			return err
 		}
 
-		song := user.AudioTrack{
-			Name: onlyFilename,
-		}
-
-		cUser.Playlists[0] = append(cUser.Playlists[0], song)
-
-		json_playlist, err := json.Marshal(cUser.Playlists)
-
-		_, err = app.DB.Exec("UPDATE users SET playlist = ? WHERE ID = ?", string(json_playlist), cUser.UserID)
+		metadata_file, err := os.Open(fmt.Sprintf("%s/metadata.txt", out_dir))
 		if err != nil {
 			return err
 		}
+		defer metadata_file.Close()
+
+		scanner := bufio.NewScanner(metadata_file)
+
+		metadata_map := map[string](*string){
+			"TITLE":  &trackData.Title,
+			"ARTIST": &trackData.Artist,
+		}
+
+		for scanner.Scan() {
+			text := scanner.Text()
+			for key := range maps.Keys(metadata_map) {
+				if strings.HasPrefix(text, key) {
+					after, found := strings.CutPrefix(text, key+"=")
+					if !found {
+						continue
+					}
+					*metadata_map[key] = after
+				}
+			}
+		}
+
+		cUser.Tracks = append(cUser.Tracks, trackData)
+
+		fmt.Println(cUser.Tracks)
+		app.setUser(r, cUser)
 
 		return nil
 	}))
@@ -295,7 +427,7 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 }
 
 func convert_audio_2_hls(src_file string, out_dir string) error {
-	fmpegCmd := exec.Command(
+	ffmpegCmd := exec.Command(
 		"ffmpeg",
 		"-i", src_file,
 		"-profile:v", "baseline", // baseline profile is compatible with most devices
@@ -305,18 +437,38 @@ func convert_audio_2_hls(src_file string, out_dir string) error {
 		"-hls_list_size", "0", // keep all segments in the playlist
 		"-f", "hls",
 		fmt.Sprintf("%s/output.m3u8", out_dir),
+		"-f",
+		"ffmetadata",
+		fmt.Sprintf("%s/metadata.txt", out_dir),
 	)
 
-	fmpegCmd.Stderr = os.Stderr
-	fmpegCmd.Stdout = os.Stdout
-
-	err := fmpegCmd.Start()
+	stderr, err := ffmpegCmd.StderrPipe()
 	if err != nil {
+		log.Fatal(err)
+	}
+
+	ffmpegCmd.Stdout = os.Stdout
+
+	if err := ffmpegCmd.Start(); err != nil {
 		return err
 	}
 
-	err = fmpegCmd.Wait()
-	if err != nil {
+	scanner := bufio.NewScanner(stderr)
+	colorRed := "\033[31m"
+	colorReset := "\033[0m"
+	for scanner.Scan() {
+		text := scanner.Text()
+
+		if strings.Contains(text, "Error") {
+			fmt.Println(colorRed, text, colorReset)
+			return errors.New("FFMPEG: " + text)
+		} else {
+			fmt.Println(text)
+		}
+
+	}
+
+	if err := ffmpegCmd.Wait(); err != nil {
 		return err
 	}
 
@@ -327,21 +479,6 @@ func (app *App) Router() *http.ServeMux {
 	router := http.NewServeMux()
 
 	static_fs := http.FileServer(http.Dir("./include_dir/"))
-
-	// router.HandleFunc("GET /audio/{hash}", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
-	//
-	// 	name := r.PathValue("hash")
-	//
-	// 	req, err := http.NewRequest("POST", fmt.Sprintf("/audio/%s", name), nil)
-	//
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	//
-	// 	io.Copy(w, req.Body)
-	//
-	// 	return nil
-	// }))
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
@@ -361,13 +498,15 @@ func (app *App) Router() *http.ServeMux {
 		}
 
 		new_user := user.User{
-			User:      gUser,
-			Playlists: []user.Playlist{[]user.AudioTrack{}},
+			User:          gUser,
+			CurAudioID:    "",
+			CurPlaylistID: 0,
+			Tracks:        user.Tracks{},
 		}
 
 		new_user.User.Name = strings.Split(new_user.Email, "@")[0]
 
-		playlist_str, err := json.Marshal(new_user.Playlists)
+		playlist_str, err := json.Marshal(new_user.Tracks)
 		if err != nil {
 			log.Println(err)
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
@@ -392,7 +531,7 @@ func (app *App) Router() *http.ServeMux {
 
 			log.Println(temp)
 
-			json.Unmarshal([]byte(temp), &new_user.Playlists)
+			json.Unmarshal([]byte(temp), &new_user.Tracks)
 		} else {
 			_, _ = app.DB.Exec("INSERT INTO users (id, email, playlist, name) VALUES (?, ?, ?, ?)", new_user.UserID, new_user.Email, string(playlist_str), new_user.Name)
 		}

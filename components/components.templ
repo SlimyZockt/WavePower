@@ -3,7 +3,6 @@ package components
 import (
 	"server/internal/user"
 	"fmt"
-	"strconv"
 )
 
 templ LoggedIn(user *user.User) {
@@ -20,9 +19,14 @@ templ FileUpload() {
 
 templ Playlist(user *user.User) {
 	@LoggedIn(user)
-	for _, val := range user.Playlists[0] {
-		@PlaylistyItem(val.Name, strconv.Itoa(val.Id))
+	for _, val := range user.Tracks {
+		@PlaylistyItem(val, user)
 	}
+}
+
+templ TrackDisplay(track *user.AudioTrack) {
+	<p class="font-bold text-lg">{ track.Title }</p>
+	<p>{ track.Artist }</p>
 }
 
 func shorterName(name string, maxLength int) string {
@@ -42,16 +46,26 @@ script onSelectAudio(id string) {
 	onSelectAudio(id)
 }
 
-templ PlaylistyItem(name string, id string) {
-	<div class="z-10" draggable="true" ondrop="drop(event, this.id)" ondragover="allowDrop(event)" id={ id } ondragstart="drag(event)">
-		<a class="join  min-w-0 shrink w-full" onclick={ onSelectAudio(id) }>
-			<p class="btn cursor-grab join-item">
-				::
-			</p>
-			<button class="btn join-item min-w-0 shrink w-full">
-				<p class="truncate">{ name } </p>
+script togglePlayer(id string) {
+	togglePlayerPLI(id)
+}
+
+templ PlaylistyItem(track user.AudioTrack, user *user.User) {
+	<div class="z-10" draggable="true" ondrop="drop(event, this.id)" ondragover="allowDrop(event)" id={ "pl-" + track.Id } ondragstart="drag(event)">
+		<a class="join min-w-0 shrink w-full">
+			<button class="!btn !btn-active join-item " id={ "pl-p-" + track.Id } onclick={ togglePlayer(track.Id) }>
+				<span class="iconify tabler--player-play w-6 h-6"></span>
 			</button>
-			<button type="button" class="btn btn-error join-item" hx-post={ "delete/" + id } hx-target={ "#" + id } hx-swap="outer-html">🗑</button>
+			<button class="btn join-item min-w-0 shrink w-full  !justify-center !items-center" onclick={ onSelectAudio(track.Id) }>
+				<p class="truncate w-full !text-left max-w-32">
+					<span class="!text-base">{ track.Title } </span>
+					<br/>
+					<span class="!text-xs !opacity-60">{ track.Artist } </span>
+				</p>
+			</button>
+			<button type="button" class="btn btn-accent join-item" hx-swap="delete" hx-post={ "/api/delete/" + track.Id } hx-target="closest div">
+				<span class="iconify tabler--trash-x w-6 h-6"></span>
+			</button>
 		</a>
 	</div>
 }
