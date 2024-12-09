@@ -30,6 +30,7 @@ AUDIO.volume = 0.5;
  */
 const TIME_LINE = document.getElementById("time-line");
 
+const TRACK_DISPLAY = document.getElementById("track-display");
 /**
  * @type {HTMLInputElement}
  */
@@ -57,6 +58,16 @@ const FORWARD = document.getElementById("forward");
  */
 const BACKWARD = document.getElementById("backward");
 
+/**
+ * @type {HTMLInputElement}
+ */
+const SHUFFLE = document.getElementById("shuffle");
+
+/**
+ * @type {HTMLInputElement}
+ */
+const REPEAT = document.getElementById("repeat");
+
 LOGIN.onclick = () => {
   window.location.href = "/auth/google";
 };
@@ -65,6 +76,8 @@ let is_playing = false;
 let last_tracked_volume = AUDIO.volume;
 let is_muted = false;
 let curAudioID = -1;
+let shuffle = false;
+let repeat = false;
 
 /**
  * @type {HTMLDivElement | null}
@@ -75,6 +88,18 @@ FORWARD.addEventListener("click", () => {
   AUDIO.currentTime = AUDIO.duration;
 });
 
+BACKWARD.addEventListener("click", () => {
+  AUDIO.currentTime = 0.0;
+  const src = `api/audio/${curAudioID}/output.m3u8`;
+  loadAudio(src, true, curAudioID);
+});
+SHUFFLE.addEventListener("click", () => {
+  shuffle = !shuffle;
+});
+
+REPEAT.addEventListener("click", () => {
+  repeat = !repeat;
+});
 loadAudio("assets/lofi/output.m3u8", false);
 
 function togglePlayer() {
@@ -135,9 +160,29 @@ AUDIO.addEventListener("timeupdate", () => {
   TIME_LEFT.innerText = `${displayTime(AUDIO.currentTime)} / ${displayTime(AUDIO.duration)}`;
 });
 
-AUDIO.addEventListener("ended", () => {
-  const src = `api/audio/${curAudioID + 1}/output.m3u8`;
-  loadAudio(src, true, curAudioID + 1);
+AUDIO.addEventListener("ended", async () => {
+  if (repeat) {
+    const src = `api/audio/${curAudioID}/output.m3u8`;
+    loadAudio(src, true, curAudioID);
+    return;
+  }
+
+  /**
+   * @type {Response | undefined}
+   */
+  let path = "/api/next_track/shuffle";
+
+  if (!shuffle) {
+    path = `/api/next_track/${curAudioID}`;
+  }
+
+  const res = await fetch(path, {
+    method: "POST",
+  });
+  const id = await res.text();
+  const src = `api/audio/${id}/output.m3u8`;
+  loadAudio(src, true, id);
+  return;
 });
 
 MUTE_BTN.addEventListener("click", () => {
@@ -183,15 +228,39 @@ async function fileuploud_change() {
   let file = files[0];
 
   console.log(file.name);
+  const totalBytes = file.size * 2;
+  let bytesUploaded = 0;
 
-  if (file === null) return;
-  await fetch(`api/upload/${file.name}`, {
-    body: file,
-    method: "POST",
+  const uploadProgress = document.getElementById("upload-progress");
+
+  const progessTrackingStream = new TransformStream({
+    transform(chunk, controller) {
+      controller.enqueue(chunk);
+      bytesUploaded += chunk.byteLength;
+      console.log("upload progress:", bytesUploaded / totalBytes);
+      uploadProgress.value = bytesUploaded / totalBytes;
+    },
+    flush() {
+      console.log("completed stream");
+    },
   });
 
-  // eslint-disable-next-line
-  htmx.trigger("#playlist", "playlist-changed", {});
+  if (file === null) return;
+  fetch(`api/upload/${file.name}`, {
+    body: file.stream().pipeThrough(progessTrackingStream),
+    method: "POST",
+    duplex: "half",
+  }).then(() => {
+    bytesUploaded += file.size;
+    uploadProgress.value = bytesUploaded / totalBytes;
+
+    // eslint-disable-next-line
+    htmx.trigger("#playlist", "playlist-changed", {});
+
+    setTimeout(() => {
+      uploadProgress.value = "0";
+    }, 1000);
+  });
 }
 
 /**
@@ -217,6 +286,11 @@ async function loadAudio(src, autoplay, id) {
     AUDIO.src = src;
   }
 
+  const res = await fetch(`/api/track_display/${id}`, {
+    method: "POST",
+  });
+  TRACK_DISPLAY.innerHTML = await res.text();
+
   AUDIO.autoplay = autoplay;
 
   if (autoplay) {
@@ -233,25 +307,16 @@ async function loadAudio(src, autoplay, id) {
     }
     return;
   }
+
   PLAY_BTN.innerHTML = PLAY_ICON;
   is_playing = false;
 }
 
-const TRACK_DISPLAY = document.getElementById("track-display");
-
 /**
  * @param {string} id
  */
-function onSelectAudio(id) {
+async function onSelectAudio(id) {
   const src = `api/audio/${id}/output.m3u8`;
-
-  fetch(`/api/track_display/${id}`, {
-    method: "POST",
-  })
-    .catch(() => "")
-    .then(async (res) => {
-      TRACK_DISPLAY.innerHTML = await res.text();
-    });
 
   loadAudio(src, true, id);
 }

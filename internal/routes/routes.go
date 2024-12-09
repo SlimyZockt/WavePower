@@ -38,6 +38,10 @@ type GrabData struct {
 	Droped  string
 }
 
+type MuxWrapper struct {
+	*http.ServeMux
+}
+
 var Sessions = map[string]user.User{}
 
 func writeBadRequest(w http.ResponseWriter) {
@@ -45,8 +49,8 @@ func writeBadRequest(w http.ResponseWriter) {
 	w.Write([]byte(http.StatusText(http.StatusBadRequest)))
 }
 
-func errWrapper(callback func(http.ResponseWriter, *http.Request) error) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (mux *MuxWrapper) HandleFuncErr(path string, callback func(http.ResponseWriter, *http.Request) error) {
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		err := callback(w, r)
 
 		if err != nil {
@@ -54,7 +58,7 @@ func errWrapper(callback func(http.ResponseWriter, *http.Request) error) func(ht
 			writeBadRequest(w)
 			return
 		}
-	}
+	})
 }
 
 func (app *App) getUser(r *http.Request) (*user.User, error) {
@@ -96,10 +100,10 @@ func (app *App) setUser(r *http.Request, user *user.User) error {
 	return nil
 }
 
-func (app *App) AuthenticatedRouter() *http.ServeMux {
-	router := http.NewServeMux()
+func (app *App) AuthenticatedRouter() *MuxWrapper {
+	router := &MuxWrapper{http.NewServeMux()}
 
-	router.HandleFunc("GET /audio/{id}/", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+	router.HandleFuncErr("GET /audio/{id}/", func(w http.ResponseWriter, r *http.Request) error {
 		id := r.PathValue("id")
 
 		if id == "" {
@@ -132,20 +136,22 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 		}
 
 		return nil
-	}))
+	})
 
-	router.HandleFunc("POST /next_track/shuffle", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+	router.HandleFuncErr("POST /next_track/shuffle", func(w http.ResponseWriter, r *http.Request) error {
 		cUser, err := app.getUser(r)
 		if err != nil {
 			return err
 		}
 		rnd := rand.IntN(len(cUser.Tracks))
 
+		fmt.Println(rnd)
+
 		fmt.Fprintf(w, "%s", cUser.Tracks[rnd].Id)
 		return nil
-	}))
+	})
 
-	router.HandleFunc("POST /next_track/{id}", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+	router.HandleFuncErr("POST /next_track/{id}", func(w http.ResponseWriter, r *http.Request) error {
 		id := r.PathValue("id")
 		cUser, err := app.getUser(r)
 		if err != nil {
@@ -164,12 +170,14 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 			}
 		}
 
-		fmt.Fprint(w, cUser.Tracks[idx])
+		fmt.Println(idx)
+
+		fmt.Fprint(w, cUser.Tracks[idx].Id)
 		return nil
 
-	}))
+	})
 
-	router.HandleFunc("POST /track_display", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+	router.HandleFuncErr("POST /track_display", func(w http.ResponseWriter, r *http.Request) error {
 		cUser, err := app.getUser(r)
 		if err != nil {
 			return err
@@ -182,9 +190,9 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 
 		components.TrackDisplay(track).Render(r.Context(), w)
 		return nil
-	}))
+	})
 
-	router.HandleFunc("POST /track_display/{id}", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+	router.HandleFuncErr("POST /track_display/{id}", func(w http.ResponseWriter, r *http.Request) error {
 		id := r.PathValue("id")
 
 		cUser, err := app.getUser(r)
@@ -199,9 +207,9 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 
 		components.TrackDisplay(track).Render(r.Context(), w)
 		return nil
-	}))
+	})
 
-	router.HandleFunc("POST /refresh_token", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+	router.HandleFuncErr("POST /refresh_token", func(w http.ResponseWriter, r *http.Request) error {
 
 		user, err := app.getUser(r)
 		if err != nil {
@@ -213,9 +221,9 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 		_ = app.setUser(r, user)
 
 		return nil
-	}))
+	})
 
-	router.HandleFunc("POST /loggedin", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+	router.HandleFuncErr("POST /loggedin", func(w http.ResponseWriter, r *http.Request) error {
 
 		user, err := app.getUser(r)
 		if err != nil {
@@ -224,9 +232,9 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 
 		components.LoggedIn(user).Render(r.Context(), w)
 		return nil
-	}))
+	})
 
-	router.HandleFunc("POST /playlist", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+	router.HandleFuncErr("POST /playlist", func(w http.ResponseWriter, r *http.Request) error {
 
 		user, err := app.getUser(r)
 		if err != nil {
@@ -236,9 +244,9 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 		components.Playlist(user).Render(r.Context(), w)
 
 		return nil
-	}))
+	})
 
-	router.HandleFunc("POST /moved", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+	router.HandleFuncErr("POST /moved", func(w http.ResponseWriter, r *http.Request) error {
 		cUser, err := app.getUser(r)
 		if err != nil {
 			return err
@@ -279,11 +287,11 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 		app.setUser(r, cUser)
 
 		return nil
-	}))
+	})
 
 	router.Handle("POST /fileupload", templ.Handler(components.FileUpload()))
 
-	router.HandleFunc("POST /delete/{id}", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
+	router.HandleFuncErr("POST /delete/{id}", func(w http.ResponseWriter, r *http.Request) error {
 		id := r.PathValue("id")
 
 		executable_path, err := os.Executable()
@@ -310,14 +318,24 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 
 		app.setUser(r, cUser)
 		return nil
-	}))
+	})
 
-	router.HandleFunc("POST /upload/{name}", errWrapper(func(w http.ResponseWriter, r *http.Request) error {
-		bytes, err := io.ReadAll(r.Body)
+	router.HandleFuncErr("POST /upload/{name}", func(w http.ResponseWriter, r *http.Request) error {
+		bytes := []byte{}
+		buf := make([]byte, 1024)
 		defer r.Body.Close()
+		for {
+			n, err := r.Body.Read(buf)
+			if err == io.EOF {
+				log.Println("EOF: ", n)
+				break
+			}
 
-		if err != nil {
-			return err
+			if err != nil {
+				return err
+			}
+
+			bytes = append(bytes, (buf[:n])...)
 		}
 
 		filename := r.PathValue("name")
@@ -420,7 +438,7 @@ func (app *App) AuthenticatedRouter() *http.ServeMux {
 		app.setUser(r, cUser)
 
 		return nil
-	}))
+	})
 
 	return router
 

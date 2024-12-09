@@ -24,8 +24,8 @@
                         <p class="font-bold text-lg">Lofi Beats</p>
                         <p>Chill Vibes</p>
                     </div>
-                    <label class="swap btn btn-ghost btn-square rounded-lg btn-sm" class="shuffle">
-                        <input type="checkbox" />
+                    <label class="swap btn btn-ghost btn-square rounded-lg btn-sm">
+                        <input type="checkbox" id="shuffle" />
                         <div class="swap-on ">
                             <span class="iconify tabler--arrows-shuffle w-6 h-6 text-accent"></span>
                         </div>
@@ -33,8 +33,8 @@
                             <span class="iconify tabler--arrows-shuffle w-6 h-6 "></span>
                         </div>
                     </label>
-                    <label class="swap btn btn-ghost btn-square rounded-lg btn-sm" class="repeat">
-                        <input type="checkbox" />
+                    <label class="swap btn btn-ghost btn-square rounded-lg btn-sm">
+                        <input type="checkbox" id="repeat" />
                         <div class="swap-on ">
                             <span class="iconify tabler--repeat-off w-6 h-6 text-accent"></span>
                         </div>
@@ -67,14 +67,14 @@
 
         </div>
         <!-- End Audio Player -->
-        <div class="flex justify-center bg-base-100 p-2" hx-post="/api/fileupload" hx-trigger="load"
+        <div class="flex justify-center bg-base-100 p-2 flex-col gap-1" hx-post="/api/fileupload" hx-trigger="load"
             hx-swap="innerHTML">
         </div>
     </div>
     <div class="bg-base-300 p-2 flex flex-col gap-2" hx-post="/api/playlist" hx-swap="innerHTML"
         hx-trigger="load, playlist-changed" id="playlist">
         <button id="login" class="btn btn-neutral min-w-0 shrink w-full">
-            <p class="truncate">
+            <p class="truncate max-w-32 font-bold">
                 Login with Google
             </p>
         </button>

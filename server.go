@@ -47,7 +47,7 @@ func main() {
 	os.Setenv("SESSION_KEY", app.AuthCode)
 	googleClientId := os.Getenv("GOOGLE_CLIENT_ID")
 	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
-	callbackLink := "http://localhost:8080/auth/google/callback"
+	callbackLink := "https://localhost:8080/auth/google/callback"
 
 	log.Println(app.AuthCode)
 
@@ -79,5 +79,5 @@ func main() {
 		Handler: stack(router),
 	}
 
-	server.ListenAndServe()
+	server.ListenAndServeTLS("./server.pem", "./server.key")
 }

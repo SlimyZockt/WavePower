@@ -2,3 +2,5 @@ node_modules
 .env
 app.db
 tmp
+server.key
+server.pem
