@@ -138,7 +138,7 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 		return nil
 	})
 
-	router.HandleFuncErr("POST /next_track/shuffle", func(w http.ResponseWriter, r *http.Request) error {
+	router.HandleFuncErr("POST /track/shuffle", func(w http.ResponseWriter, r *http.Request) error {
 		cUser, err := app.getUser(r)
 		if err != nil {
 			return err
@@ -151,7 +151,7 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 		return nil
 	})
 
-	router.HandleFuncErr("POST /next_track/{id}", func(w http.ResponseWriter, r *http.Request) error {
+	router.HandleFuncErr("POST /track/next/{id}", func(w http.ResponseWriter, r *http.Request) error {
 		id := r.PathValue("id")
 		cUser, err := app.getUser(r)
 		if err != nil {
@@ -170,7 +170,29 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 			}
 		}
 
-		fmt.Println(idx)
+		fmt.Fprint(w, cUser.Tracks[idx].Id)
+		return nil
+
+	})
+
+	router.HandleFuncErr("POST /track/previous/{id}", func(w http.ResponseWriter, r *http.Request) error {
+		id := r.PathValue("id")
+		cUser, err := app.getUser(r)
+		if err != nil {
+			return err
+		}
+
+		idx := 0
+		for i, val := range cUser.Tracks {
+			if val.Id == id {
+				if i == 0 {
+					idx = len(cUser.Tracks) - 1
+					break
+				}
+				idx = i - 1
+				break
+			}
+		}
 
 		fmt.Fprint(w, cUser.Tracks[idx].Id)
 		return nil

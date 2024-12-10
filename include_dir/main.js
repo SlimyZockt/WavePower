@@ -93,6 +93,16 @@ BACKWARD.addEventListener("click", () => {
   const src = `api/audio/${curAudioID}/output.m3u8`;
   loadAudio(src, true, curAudioID);
 });
+
+BACKWARD.addEventListener("dblclick", async () => {
+  const res = await fetch(`api/track/previous/${curAudioID}`, {
+    method: "POST",
+  });
+  const id = await res.text();
+  const src = `api/audio/${id}/output.m3u8`;
+  loadAudio(src, true, id);
+});
+
 SHUFFLE.addEventListener("click", () => {
   shuffle = !shuffle;
 });
@@ -170,10 +180,10 @@ AUDIO.addEventListener("ended", async () => {
   /**
    * @type {Response | undefined}
    */
-  let path = "/api/next_track/shuffle";
+  let path = "/api/track/shuffle";
 
   if (!shuffle) {
-    path = `/api/next_track/${curAudioID}`;
+    path = `/api/track/next/${curAudioID}`;
   }
 
   const res = await fetch(path, {
@@ -307,6 +317,7 @@ async function loadAudio(src, autoplay, id) {
     }
     return;
   }
+  TLS;
 
   PLAY_BTN.innerHTML = PLAY_ICON;
   is_playing = false;
@@ -317,6 +328,8 @@ async function loadAudio(src, autoplay, id) {
  */
 async function onSelectAudio(id) {
   const src = `api/audio/${id}/output.m3u8`;
+
+  console.log(src);
 
   loadAudio(src, true, id);
 }
