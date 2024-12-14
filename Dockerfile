@@ -38,7 +38,7 @@ RUN curl -fsSL \
     sh    && \ 
     goose -dir=assets/migrations/ sqlite3 app.db up
 RUN ./tailwindcss -o include_dir/output.css -m
-RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/server
+RUN GOOS=linux go build -o /bin/server
 # Expose the port that the application listens on.
 EXPOSE 8080
 
