@@ -33,11 +33,6 @@ type App struct {
 	DB       *sql.DB
 }
 
-type GrabData struct {
-	Grabbed string
-	Droped  string
-}
-
 type MuxWrapper struct {
 	*http.ServeMux
 }
@@ -55,7 +50,8 @@ func (mux *MuxWrapper) HandleFuncErr(path string, callback func(http.ResponseWri
 
 		if err != nil {
 			log.Println(err)
-			writeBadRequest(w)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
 			return
 		}
 	})
@@ -281,6 +277,11 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 			return err
 		}
 
+		type GrabData struct {
+			Grabbed string
+			Droped  string
+		}
+
 		data := GrabData{}
 
 		err = json.Unmarshal(bytes, &data)
@@ -292,6 +293,7 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 		if data.Grabbed == data.Droped || data.Grabbed == "" || data.Droped == "" {
 			return errors.New("Grabbed Data is wrong")
 		}
+		log.Println(data.Grabbed, data.Droped)
 
 		droped_id := 0
 		grabbed_id := 0
@@ -304,8 +306,10 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 			}
 		}
 
+		log.Println(grabbed_id, droped_id)
 		cUser.Tracks.Move(grabbed_id, droped_id)
 
+		log.Println(cUser.Tracks)
 		app.setUser(r, cUser)
 
 		return nil
@@ -349,7 +353,6 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 		for {
 			n, err := r.Body.Read(buf)
 			if err == io.EOF {
-				log.Println("EOF: ", n)
 				break
 			}
 
@@ -415,6 +418,10 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 		go func() {
 			err := convert_audio_2_hls(temp_path, out_dir)
 			errChan <- err
+			if err != nil {
+				errChan <- err
+				return
+			}
 
 			err = os.Remove(temp_path)
 			if err != nil {
@@ -425,7 +432,9 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 		}()
 
 		if <-errChan != nil {
-			return err
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(((<-errChan).Error())))
+			return nil
 		}
 
 		metadata_file, err := os.Open(fmt.Sprintf("%s/metadata.txt", out_dir))
@@ -500,12 +509,9 @@ func convert_audio_2_hls(src_file string, out_dir string) error {
 		text := scanner.Text()
 
 		if strings.Contains(text, "Error") {
-			fmt.Println(colorRed, text, colorReset)
-			return errors.New("FFMPEG: " + text)
-		} else {
-			fmt.Println(text)
+			log.Println(colorRed, text, colorReset)
+			return errors.New("Failed to encode the track")
 		}
-
 	}
 
 	if err := ffmpegCmd.Wait(); err != nil {
@@ -521,7 +527,6 @@ func (app *App) Router() *http.ServeMux {
 	static_fs := http.FileServer(http.Dir("./include_dir/"))
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-
 		http.StripPrefix("", static_fs).ServeHTTP(w, r)
 	})
 
@@ -531,7 +536,6 @@ func (app *App) Router() *http.ServeMux {
 
 		gUser, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {
-			// fmt.Fprint(w, err)
 			log.Println(err)
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return

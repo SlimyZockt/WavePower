@@ -177,9 +177,6 @@ AUDIO.addEventListener("ended", async () => {
     return;
   }
 
-  /**
-   * @type {Response | undefined}
-   */
   let path = "/api/track/shuffle";
 
   if (!shuffle) {
@@ -238,7 +235,7 @@ async function fileuploud_change() {
   let file = files[0];
 
   console.log(file.name);
-  const totalBytes = file.size * 2;
+  const totalBytes = file.size * 1.5;
   let bytesUploaded = 0;
 
   const uploadProgress = document.getElementById("upload-progress");
@@ -260,8 +257,19 @@ async function fileuploud_change() {
     body: file.stream().pipeThrough(progessTrackingStream),
     method: "POST",
     duplex: "half",
-  }).then(() => {
-    bytesUploaded += file.size;
+  }).then(async (res) => {
+    const err = await res.text();
+    if (err !== "") {
+      const uploadProgressTT = document.getElementById("upload-progress-tt");
+      uploadProgressTT.setAttribute("data-tip", err);
+      uploadProgressTT.className = "tooltip tooltip-open tooltip-error";
+      setTimeout(() => {
+        uploadProgressTT.setAttribute("data-tip", "");
+        uploadProgressTT.className = "";
+      }, 2000);
+    }
+
+    bytesUploaded = file.size * 1.5;
     uploadProgress.value = bytesUploaded / totalBytes;
 
     // eslint-disable-next-line
@@ -317,7 +325,6 @@ async function loadAudio(src, autoplay, id) {
     }
     return;
   }
-  TLS;
 
   PLAY_BTN.innerHTML = PLAY_ICON;
   is_playing = false;
@@ -344,4 +351,44 @@ function togglePlayerPLI(id) {
   } else {
     onSelectAudio(id);
   }
+}
+
+// eslint-disable-next-line
+function drag(e) {
+  e.dataTransfer.setData("s_name", e.target.id);
+}
+
+// eslint-disable-next-line
+function allowDrop(e) {
+  e.preventDefault();
+}
+/**
+ *@param {string} id
+ */
+// eslint-disable-next-line
+async function drop(e, id) {
+  e.preventDefault();
+  /**
+   *@type {string}
+   */
+  let data = e.dataTransfer.getData("s_name");
+
+  console.table({
+    grabbed: data.substring(3),
+    droped: id.substring(3),
+  });
+  if (data === "" || id === "") {
+    return;
+  }
+
+  await fetch("/api/moved", {
+    method: "POST",
+    body: JSON.stringify({
+      grabbed: data.substring(3),
+      droped: id.substring(3),
+    }),
+  });
+
+  // eslint-disable-next-line
+  htmx.trigger("#playlist", "playlist-changed", {});
 }
