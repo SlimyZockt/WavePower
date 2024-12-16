@@ -1,7 +1,6 @@
 # WavePower
 
-WavePower is demo audio player that allows the uploading and streaming audio files.
-
+WavePower is a demo audio player that allows the uploading and streaming audio files.
 
 ## Setup
 
