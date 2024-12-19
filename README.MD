@@ -9,7 +9,7 @@ Create a .env file with your google ID & secret like this:
 ```bash
 GOOGLE_CLIENT_ID="420.googleuser.com"
 GOOGLE_CLIENT_SECRET="s3cR3t-69"
-CALLBACK_LINK="https://domain.com/auth/google/callback""
+CALLBACK_LINK="https://localhost:8080/auth/google/callback""
 ```
 
 At last you can run the application with:

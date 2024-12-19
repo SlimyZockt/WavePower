@@ -47,7 +47,7 @@ func main() {
 	os.Setenv("SESSION_KEY", app.AuthCode)
 	googleClientId := os.Getenv("GOOGLE_CLIENT_ID")
 	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
-	callbackLink := "https://localhost:8080/auth/google/callback"
+	callbackLink := os.Getenv("CALLBACK_LINK")
 
 	log.Println(app.AuthCode)
 
