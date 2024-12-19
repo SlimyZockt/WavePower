@@ -49,7 +49,7 @@ func main() {
 	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
 	callbackLink := os.Getenv("CALLBACK_LINK")
 
-	log.Println(app.AuthCode)
+	log.Println(callbackLink)
 
 	store := sessions.NewCookieStore([]byte(app.AuthCode))
 	store.MaxAge(86400 * 30)
@@ -79,5 +79,7 @@ func main() {
 		Handler: stack(router),
 	}
 
-	server.ListenAndServeTLS("./server.pem", "./server.key")
+	err = server.ListenAndServeTLS("./server.pem", "./server.key")
+
+	log.Println(err)
 }
