@@ -91,7 +91,7 @@ FORWARD.addEventListener("click", () => {
 BACKWARD.addEventListener("click", () => {
   AUDIO.currentTime = 0.0;
   const src = `api/audio/${curAudioID}/output.m3u8`;
-  loadAudio(src, true, curAudioID);
+  loadAudio(src, curAudioID);
 });
 
 BACKWARD.addEventListener("dblclick", async () => {
@@ -100,7 +100,7 @@ BACKWARD.addEventListener("dblclick", async () => {
   });
   const id = await res.text();
   const src = `api/audio/${id}/output.m3u8`;
-  loadAudio(src, true, id);
+  loadAudio(src, id);
 });
 
 SHUFFLE.addEventListener("click", () => {
@@ -110,7 +110,9 @@ SHUFFLE.addEventListener("click", () => {
 REPEAT.addEventListener("click", () => {
   repeat = !repeat;
 });
-loadAudio("assets/lofi/output.m3u8", false);
+
+// first load audio
+loadAudio("assets/lofi/output.m3u8", undefined);
 
 function togglePlayer() {
   if (!is_playing) {
@@ -188,7 +190,7 @@ AUDIO.addEventListener("ended", async () => {
   });
   const id = await res.text();
   const src = `api/audio/${id}/output.m3u8`;
-  loadAudio(src, true, id);
+  loadAudio(src, id);
   return;
 });
 
@@ -226,15 +228,12 @@ async function fileuploud_change() {
   /**
    * @type {HTMLInputElement} fileuploud
    */
-  let fileuploud = document.getElementById("fileuploud");
-  let files = fileuploud.files;
+  const fileuploud = document.getElementById("fileuploud");
+  const files = fileuploud.files;
 
   if (files === null) return;
+  const file = files[0];
 
-  console.log(files);
-  let file = files[0];
-
-  console.log(file.name);
   const totalBytes = file.size * 1.5;
   let bytesUploaded = 0;
 
@@ -283,10 +282,9 @@ async function fileuploud_change() {
 
 /**
  * @param {string} src
- * @param {boolean} autoplay
- * @param {string} id
+ * @param {string | undefined} id
  */
-async function loadAudio(src, autoplay, id) {
+async function loadAudio(src, id) {
   curAudioID = id;
 
   // eslint-disable-next-line
@@ -296,7 +294,7 @@ async function loadAudio(src, autoplay, id) {
     hls.loadSource(src);
     hls.attachMedia(AUDIO);
     // eslint-disable-next-line
-    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+    hls.on(Hls.Events.MANIFEST_PARSED, function() {
       TIME_LINE.value = "0";
       AUDIO.currentTime = 0;
     });
@@ -304,14 +302,14 @@ async function loadAudio(src, autoplay, id) {
     AUDIO.src = src;
   }
 
-  const res = await fetch(`/api/track_display/${id}`, {
-    method: "POST",
-  });
-  TRACK_DISPLAY.innerHTML = await res.text();
+  if (id !== undefined) {
+    const res = await fetch(`/api/track_display/${id}`, {
+      method: "POST",
+    });
+    TRACK_DISPLAY.innerHTML = await res.text();
 
-  AUDIO.autoplay = autoplay;
+    AUDIO.autoplay = true;
 
-  if (autoplay) {
     PLAY_BTN.innerHTML = PAUSE_ICON;
     is_playing = true;
 
@@ -327,6 +325,7 @@ async function loadAudio(src, autoplay, id) {
   }
 
   PLAY_BTN.innerHTML = PLAY_ICON;
+  AUDIO.autoplay = false;
   is_playing = false;
 }
 
@@ -335,10 +334,7 @@ async function loadAudio(src, autoplay, id) {
  */
 async function onSelectAudio(id) {
   const src = `api/audio/${id}/output.m3u8`;
-
-  console.log(src);
-
-  loadAudio(src, true, id);
+  loadAudio(src, id);
 }
 
 /**

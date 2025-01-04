@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"maps"
 	"math/rand/v2"
 	"net/http"
 	"os"
@@ -50,7 +49,8 @@ func (mux *MuxWrapper) HandleFuncErr(path string, callback func(http.ResponseWri
 
 		if err != nil {
 			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
+
+			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
@@ -379,13 +379,13 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 			"uploads/temp/"+cUser.UserID+"@"+filename,
 		)
 
-		err = os.MkdirAll(filepath.Dir(temp_path), os.ModeDir)
+		err = os.MkdirAll(filepath.Dir(temp_path), 0700)
 
 		if err != nil && !os.IsExist(err) {
 			return err
 		}
 
-		err = os.WriteFile(temp_path, bytes, os.ModeTemporary)
+		err = os.WriteFile(temp_path, bytes, 0700)
 		if err != nil {
 			return err
 		}
@@ -408,7 +408,7 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 			fmt.Sprintf("/uploads/%s/%s", cUser.UserID, trackData.Id),
 		)
 
-		err = os.MkdirAll(out_dir, os.ModeDir)
+		err = os.MkdirAll(out_dir, 0700)
 		if err != nil && !os.IsExist(err) {
 			return err
 		}
@@ -452,13 +452,13 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 
 		for scanner.Scan() {
 			text := scanner.Text()
-			for key := range maps.Keys(metadata_map) {
+			for key, val := range metadata_map {
 				if strings.HasPrefix(text, key) {
-					after, found := strings.CutPrefix(text, key+"=")
+					data, found := strings.CutPrefix(text, key+"=")
 					if !found {
 						continue
 					}
-					*metadata_map[key] = after
+					*val = data
 				}
 			}
 		}

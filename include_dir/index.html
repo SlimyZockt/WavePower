@@ -19,8 +19,8 @@
             <div hx-post="/refresh_token" hx-trigger="every 30m" hx-swap="none"></div>
             <div class="flex flex-col gap-3">
                 <div class="flex flex-row justify-between gap-2 items-end">
-                    <div class="grow" id="track-display" hx-post="/api/track_display" hx-trigger="track-loaded, load"
-                        hx-swap="innerHTML">
+                    <div class="grow" id="track-display" hx-get="/api/track_display/default"
+                        hx-trigger="track-loaded, load" hx-swap="innerHTML">
                         <p class="font-bold text-lg">Lofi Beats</p>
                         <p>Chill Vibes</p>
                     </div>
