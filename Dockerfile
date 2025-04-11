@@ -10,7 +10,7 @@ RUN --mount=type=cache,target=/var/cache/apk \
     sqlite \
     go \
     nodejs \
-    npm
+    pnpm
 
 RUN curl -sLo templ.tar.gz https://github.com/a-h/templ/releases/download/v0.2.793/templ_Linux_x86_64.tar.gz \
     &&\
@@ -26,7 +26,7 @@ RUN curl -fsSL \
     sh 
 
 COPY package.json package-lock.json ./
-RUN npm install
+RUN pnpm install
 
 COPY go.mod go.sum ./
 RUN go mod download -x
