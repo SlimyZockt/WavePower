@@ -74,12 +74,15 @@ func main() {
 	authRouter := app.AuthenticatedRouter()
 	router.Handle("/api/", http.StripPrefix("/api", middleware.IsAuthenticated(authRouter)))
 
+	protocols := http.Protocols{}
+	protocols.SetUnencryptedHTTP2(true)
+
 	server := http.Server{
-		Addr:    ":8080",
-		Handler: stack(router),
+		Addr:      ":8080",
+		Handler:   stack(router),
+		Protocols: &protocols,
 	}
 
-	err = server.ListenAndServeTLS("./server.pem", "./server.key")
-
+	err = server.ListenAndServe()
 	log.Println(err)
 }
