@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM alpine:edge AS final
+FROM alpine:3.21 AS final
 WORKDIR /app
 
 RUN --mount=type=cache,target=/var/cache/apk \
@@ -43,8 +43,12 @@ RUN goose -dir=assets/migrations/ sqlite3 app.db up
 RUN ./tailwindcss -o include_dir/output.css -m
 RUN GOOS=linux go build -o /bin/server
 # Expose the port that the application listens on.
+EXPOSE 80
 EXPOSE 8080
 
+# Mount the certificate cache directory as a volume, so it remains even after
+# we deploy a new version
+VOLUME ["/cert-cache"]
 # What the container should run when it is started.
 ENTRYPOINT [ "/bin/server" ]
 
