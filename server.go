@@ -30,8 +30,8 @@ func GenStrin(length int) string {
 
 func main() {
 	err := godotenv.Load(".env")
-	if err != nil {
-		log.Panicln(err)
+	if err != nil && !os.IsNotExist(err) {
+		log.Fatal(err)
 	}
 
 	db, err := sql.Open("sqlite3", "./app.db")
