@@ -1,7 +1,7 @@
 module server
 
 require (
-	github.com/a-h/templ v0.2.731
+	github.com/a-h/templ v0.3.857
 	github.com/gorilla/sessions v1.1.1
 	github.com/joho/godotenv v1.5.1
 	github.com/markbates/goth v1.80.0
