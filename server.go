@@ -78,9 +78,8 @@ func main() {
 	protocols.SetUnencryptedHTTP2(true)
 
 	server := http.Server{
-		Addr:      ":8080",
-		Handler:   stack(router),
-		Protocols: &protocols,
+		Addr:    ":8080",
+		Handler: stack(router),
 	}
 
 	err = server.ListenAndServe()
