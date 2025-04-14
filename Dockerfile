@@ -41,7 +41,7 @@ RUN ./tailwindcss -o include_dir/output.css -m
 # Expose the port that the application listens on.
 EXPOSE 8080
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/server
+RUN GOOS=linux go build -o /bin/server
 
 # What the container should run when it is started.
 ENTRYPOINT [ "/bin/server" ]
