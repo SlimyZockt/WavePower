@@ -38,15 +38,12 @@ RUN templ/templ generate
 RUN goose -dir=assets/migrations/ sqlite3 app.db up
 
 RUN ./tailwindcss -o include_dir/output.css -m
-RUN GOOS=linux go build -o /bin/server
+# RUN GOOS=linux go build -o /bin/server
+RUN go build -o /bin/server
 # Expose the port that the application listens on.
 EXPOSE 443
-EXPOSE 80
 EXPOSE 8080
 
-# Mount the certificate cache directory as a volume, so it remains even after
-# we deploy a new version
-VOLUME ["/cert-cache"]
 # What the container should run when it is started.
 ENTRYPOINT [ "/bin/server" ]
 
