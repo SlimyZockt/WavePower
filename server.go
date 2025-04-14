@@ -95,6 +95,6 @@ func main() {
 		TLSConfig: tls_config,
 	}
 
-	err = server.ListenAndServeTLS("server.pem", "server.key")
+	err = server.ListenAndServeTLS("", "")
 	log.Println(err)
 }
