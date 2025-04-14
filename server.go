@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"log"
 	"math/rand"
@@ -73,15 +74,25 @@ func main() {
 
 	authRouter := app.AuthenticatedRouter()
 	router.Handle("/api/", http.StripPrefix("/api", middleware.IsAuthenticated(authRouter)))
-	//
-	// h2s := &http2.Server{
-	// 	MaxConcurrentStreams: 250,
-	// }
-	//
+
+	cert, err := tls.LoadX509KeyPair("server.pem", "server.key")
+
+	if os.IsNotExist(err) {
+		cert, err = tls.X509KeyPair([]byte(os.Getenv("CERT")), []byte(os.Getenv("KEY")))
+	}
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tls_config := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
 
 	server := http.Server{
-		Addr:    ":8080",
-		Handler: stack(router),
+		Addr:      ":8080",
+		Handler:   stack(router),
+		TLSConfig: tls_config,
 	}
 
 	err = server.ListenAndServeTLS("server.pem", "server.key")
