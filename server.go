@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"database/sql"
 	"log"
 	"math/rand"
@@ -46,11 +45,27 @@ func main() {
 		DB:       db,
 	}
 
-	// os.Setenv("SESSION_SECRET", app.AuthCode)
 	os.Setenv("SESSION_KEY", app.AuthCode)
-	googleClientId := os.Getenv("GOOGLE_CLIENT_ID")
-	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
-	callbackLink := os.Getenv("CALLBACK_LINK")
+	googleClientId, ok := os.LookupEnv("GOOGLE_CLIENT_ID")
+
+	if !ok {
+		log.Fatal("GOOGLE_CLIENT_ID is missing in the env")
+	}
+
+	googleClientSecret, ok := os.LookupEnv("GOOGLE_CLIENT_SECRET")
+
+	if !ok {
+		log.Fatal("GOOGLE_CLIENT_SECRET is missing in the env")
+	}
+
+	callbackLink, ok := os.LookupEnv("CALLBACK_LINK")
+
+	if !ok {
+		log.Fatal("CALLBACK_LINK is missing in the env")
+	}
+
+	_, is_dev := os.LookupEnv("DEV")
+	log.Println("Is dev: ", is_dev)
 
 	log.Println(callbackLink)
 
@@ -58,8 +73,8 @@ func main() {
 	store.MaxAge(86400 * 30)
 
 	store.Options.Path = "/"
-	store.Options.Secure = false
-	store.Options.HttpOnly = true
+	store.Options.Secure = !is_dev
+	store.Options.HttpOnly = is_dev
 
 	gothic.Store = store
 
@@ -82,28 +97,19 @@ func main() {
 	authRouter := app.AuthenticatedRouter()
 	router.Handle("/api/", http.StripPrefix("/api", middleware.IsAuthenticated(authRouter)))
 
-	cert, err := tls.LoadX509KeyPair("server.pem", "server.key")
-
-	if err != nil {
-		cert, err = tls.X509KeyPair([]byte(os.Getenv("CERT")), []byte(os.Getenv("KEY")))
-	}
-
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	tls_config := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-	}
-
-	_ = tls_config
-
 	server := http.Server{
 		Addr:    ":8080",
 		Handler: stack(router),
-		// TLSConfig: tls_config,
 	}
 
-	err = server.ListenAndServe()
+	if is_dev {
+		err = server.ListenAndServeTLS("server.pem", "server.key")
+	} else {
+		err = server.ListenAndServe()
+	}
 	log.Println(err)
 }

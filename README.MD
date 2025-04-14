@@ -10,15 +10,11 @@ Create a .env file with your google ID & secret like this:
 GOOGLE_CLIENT_ID="420.googleuser.com"
 GOOGLE_CLIENT_SECRET="s3cR3t-69"
 CALLBACK_LINK="https://localhost:8080/auth/google/callback"
-CERT=""
-KEY=""
 ```
-In addition genearate a TlS KEY whith `openssl req -new -x509 -sha256 -key server.key -out server.pem -days 3650` and add both files to the repo.
 
-
-At last you can run the application with:
+You can add DEV to enable dev mode
 ```bash
-docker compose up --build
+DEV=""
 ```
 *by default the server runs on the Port `:8080`*
 
