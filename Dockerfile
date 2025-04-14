@@ -31,9 +31,6 @@ RUN pnpm install
 COPY go.mod go.sum ./
 RUN go mod download -x
 
-
-COPY server.key server.pem /bin/
-
 COPY . ./
 
 RUN templ/templ generate
