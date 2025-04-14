@@ -28,6 +28,8 @@ RUN curl -fsSL \
 COPY package.json package-lock.json ./
 RUN pnpm install
 
+COPY .env .
+
 COPY go.mod go.sum ./
 RUN go mod download -x
 

@@ -16,6 +16,8 @@ import (
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
 	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 )
 
 func GenStrin(length int) string {
@@ -67,9 +69,14 @@ func main() {
 
 	log.Println("Listening on :8080")
 
+	h2s := &http2.Server{}
+
 	router := app.Router()
 	stack := middleware.CreateStack(
 		middleware.Logging,
+		func(next http.Handler) http.Handler {
+			return h2c.NewHandler(next, h2s)
+		},
 	)
 
 	authRouter := app.AuthenticatedRouter()
@@ -89,12 +96,14 @@ func main() {
 		Certificates: []tls.Certificate{cert},
 	}
 
+	_ = tls_config
+
 	server := http.Server{
-		Addr:      ":8080",
-		Handler:   stack(router),
-		TLSConfig: tls_config,
+		Addr:    ":8080",
+		Handler: stack(router),
+		// TLSConfig: tls_config,
 	}
 
-	err = server.ListenAndServeTLS("", "")
+	err = server.ListenAndServe()
 	log.Println(err)
 }
