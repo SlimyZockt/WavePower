@@ -15,8 +15,6 @@ import (
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
 	_ "github.com/mattn/go-sqlite3"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 )
 
 func GenStrin(length int) string {
