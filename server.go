@@ -77,7 +77,7 @@ func main() {
 
 	cert, err := tls.LoadX509KeyPair("server.pem", "server.key")
 
-	if os.IsNotExist(err) {
+	if err != nil {
 		cert, err = tls.X509KeyPair([]byte(os.Getenv("CERT")), []byte(os.Getenv("KEY")))
 	}
 
