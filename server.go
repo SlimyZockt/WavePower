@@ -74,7 +74,7 @@ func main() {
 
 	store.Options.Path = "/"
 	store.Options.Secure = !is_dev
-	store.Options.HttpOnly = is_dev
+	store.Options.HttpOnly = true
 
 	gothic.Store = store
 
