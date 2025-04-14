@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"database/sql"
 	"log"
 	"math/rand"
@@ -16,7 +15,8 @@ import (
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
 	_ "github.com/mattn/go-sqlite3"
-	"golang.org/x/crypto/acme/autocert"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 )
 
 func GenStrin(length int) string {
@@ -75,24 +75,17 @@ func main() {
 
 	authRouter := app.AuthenticatedRouter()
 	router.Handle("/api/", http.StripPrefix("/api", middleware.IsAuthenticated(authRouter)))
-
-	certManager := autocert.Manager{
-		Prompt: autocert.AcceptTOS,
-		Cache:  autocert.DirCache("cert-cache"),
-		// Put your domain here:
-		HostPolicy: autocert.HostWhitelist("wavepower.onrender.com", "localhost", "wp.slimycode.cc"),
-	}
+	//
+	// h2s := &http2.Server{
+	// 	MaxConcurrentStreams: 250,
+	// }
+	//
 
 	server := http.Server{
 		Addr:    ":8080",
 		Handler: stack(router),
-		TLSConfig: &tls.Config{
-			GetCertificate: certManager.GetCertificate,
-		},
 	}
 
-	go http.ListenAndServe(":80", certManager.HTTPHandler(nil))
-
-	err = server.ListenAndServeTLS("", "")
+	err = server.ListenAndServeTLS("server.pem", "server.key")
 	log.Println(err)
 }

@@ -43,6 +43,7 @@ RUN goose -dir=assets/migrations/ sqlite3 app.db up
 RUN ./tailwindcss -o include_dir/output.css -m
 RUN GOOS=linux go build -o /bin/server
 # Expose the port that the application listens on.
+EXPOSE 443
 EXPOSE 80
 EXPOSE 8080
 
