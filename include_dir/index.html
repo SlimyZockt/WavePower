@@ -12,69 +12,69 @@
     <link rel="stylesheet" href="output.css">
 </head>
 
-<body class="text-base grid grid-cols-[1fr_auto] grid-rows-none h-screen">
-    <div class="flex flex-col justify-center items-center">
+<body class="grid h-screen grid-cols-[1fr_auto] grid-rows-none text-base">
+    <div class="flex flex-col items-center justify-center">
         <!-- Audio Player -->
-        <div class="grow flex justify-center items-center">
+        <div class="flex grow items-center justify-center">
             <div hx-post="/refresh_token" hx-trigger="every 30m" hx-swap="none"></div>
             <div class="flex flex-col gap-3">
-                <div class="flex flex-row justify-between gap-2 items-end">
+                <div class="flex flex-row items-end justify-between gap-2">
                     <div class="grow" id="track-display" hx-get="/api/track_display/default"
                         hx-trigger="track-loaded, load" hx-swap="innerHTML">
-                        <p class="font-bold text-lg">Lofi Beats</p>
+                        <p class="text-lg font-bold">Lofi Beats</p>
                         <p>Chill Vibes</p>
                     </div>
-                    <label class="swap btn btn-ghost btn-square rounded-lg btn-sm">
+                    <label class="btn btn-square btn-ghost swap btn-sm rounded-lg">
                         <input type="checkbox" id="shuffle" />
                         <div class="swap-on ">
-                            <span class="iconify tabler--arrows-shuffle w-6 h-6 text-accent"></span>
+                            <span class="iconify h-6 w-6 text-accent tabler--arrows-shuffle"></span>
                         </div>
                         <div class="swap-off">
-                            <span class="iconify tabler--arrows-shuffle w-6 h-6 "></span>
+                            <span class="iconify h-6 w-6 tabler--arrows-shuffle "></span>
                         </div>
                     </label>
-                    <label class="swap btn btn-ghost btn-square rounded-lg btn-sm">
+                    <label class="btn btn-square btn-ghost swap btn-sm rounded-lg">
                         <input type="checkbox" id="repeat" />
                         <div class="swap-on ">
-                            <span class="iconify tabler--repeat-off w-6 h-6 text-accent"></span>
+                            <span class="iconify h-6 w-6 text-accent tabler--repeat-off"></span>
                         </div>
                         <div class="swap-off">
-                            <span class="iconify tabler--repeat  w-6 h-6"></span>
+                            <span class="iconify h-6  w-6 tabler--repeat"></span>
                         </div>
                     </label>
                 </div>
                 <div class="flex flex-row justify-between gap-2">
-                    <button class="btn btn-ghost btn-square rounded-lg btn-sm" id="backward">
-                        <span class="iconify tabler--player-skip-back w-6 h-6"></span>
+                    <button class="btn btn-square btn-ghost btn-sm rounded-lg" id="backward">
+                        <span class="iconify h-6 w-6 tabler--player-skip-back"></span>
                     </button>
-                    <button id="play-btn" class="btn btn-ghost btn-square rounded-lg btn-sm"></button>
-                    <button class="btn btn-ghost btn-square rounded-lg btn-sm" id="forward">
-                        <span class="iconify tabler--player-skip-forward w-6 h-6"></span>
+                    <button id="play-btn" class="btn btn-square btn-ghost btn-sm rounded-lg"></button>
+                    <button class="btn btn-square btn-ghost btn-sm rounded-lg" id="forward">
+                        <span class="iconify h-6 w-6 tabler--player-skip-forward"></span>
                     </button>
-                    <div id="time-left" class="flex justify-end items-center font-semibold font-mono"></div>
+                    <div id="time-left" class="flex items-center justify-end font-mono font-semibold"></div>
                 </div>
                 <div>
                     <input id="time-line" type="range" min="0" max="100" value="0"
                         class="range range-secondary range-xs accent-black" />
                 </div>
-                <div class="flex flex-row gap-2 items-center">
-                    <button class="btn btn-ghost btn-square rounded-lg btn-sm" id="mute-btn">
+                <div class="flex flex-row items-center gap-2">
+                    <button class="btn btn-square btn-ghost btn-sm rounded-lg" id="mute-btn">
                     </button>
-                    <input type="range" min="0" max="100" value="40" class="range progress range-xs" id="volume" />
+                    <input type="range" min="0" max="100" value="40" class="progress range range-xs" id="volume" />
                 </div>
                 <audio id="audio"></audio>
             </div>
 
         </div>
         <!-- End Audio Player -->
-        <div class="flex justify-center bg-base-100 p-2 flex-col gap-1" hx-post="/api/fileupload" hx-trigger="load"
+        <div class="flex flex-col justify-center gap-1 bg-base-100 p-2" hx-post="/api/fileupload" hx-trigger="load"
             hx-swap="innerHTML">
         </div>
     </div>
-    <div class="bg-base-300 p-2 flex flex-col gap-2" hx-post="/api/playlist" hx-swap="innerHTML"
+    <div class="flex flex-col gap-2 bg-base-300 p-2" hx-post="/api/playlist" hx-swap="innerHTML"
         hx-trigger="load, playlist-changed" id="playlist">
-        <button id="login" class="btn btn-neutral min-w-0 shrink w-full">
-            <p class="truncate max-w-32 font-bold">
+        <button id="login" class="btn btn-neutral w-full min-w-0 shrink">
+            <p class="max-w-32 truncate font-bold">
                 Login with Google
             </p>
         </button>
