@@ -285,7 +285,6 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 		data := GrabData{}
 
 		err = json.Unmarshal(bytes, &data)
-
 		if err != nil {
 			return err
 		}
