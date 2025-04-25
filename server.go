@@ -15,8 +15,6 @@ import (
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
 	_ "github.com/mattn/go-sqlite3"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 )
 
 func GenStrin(length int) string {
@@ -82,16 +80,9 @@ func main() {
 		google.New(googleClientId, googleClientSecret, callbackLink),
 	)
 
-	log.Println("Listening on :8080")
-
-	h2s := &http2.Server{}
-
 	router := app.Router()
 	stack := middleware.CreateStack(
 		middleware.Logging,
-		func(next http.Handler) http.Handler {
-			return h2c.NewHandler(next, h2s)
-		},
 	)
 
 	authRouter := app.AuthenticatedRouter()
@@ -101,15 +92,28 @@ func main() {
 		log.Fatal(err)
 	}
 
+	protocols := http.Protocols{}
+	protocols.SetUnencryptedHTTP2(true)
+
 	server := http.Server{
 		Addr:    ":8080",
 		Handler: stack(router),
 	}
 
-	if is_dev {
-		err = server.ListenAndServeTLS("server.pem", "server.key")
-	} else {
-		err = server.ListenAndServe()
+	if !is_dev {
+		server.Protocols = &protocols
 	}
+
+	log.Println("Listening on :8080")
+
+	certFile := ""
+	keyFile := ""
+
+	if is_dev {
+		certFile = "server.pem"
+		keyFile = "server.key"
+	}
+
+	err = server.ListenAndServeTLS(certFile, keyFile)
 	log.Println(err)
 }

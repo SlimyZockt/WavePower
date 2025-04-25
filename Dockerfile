@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM alpine:3.21 AS final
+FROM alpine:edge AS final
 WORKDIR /app
 
 RUN --mount=type=cache,target=/var/cache/apk \
@@ -10,16 +10,8 @@ RUN --mount=type=cache,target=/var/cache/apk \
     sqlite \
     go \
     nodejs \
-    pnpm
-
-RUN curl -sLo templ.tar.gz https://github.com/a-h/templ/releases/download/v0.2.793/templ_Linux_x86_64.tar.gz \
-    &&\
-    mkdir templ &&\
-    tar -xzf templ.tar.gz -C templ
-
-RUN curl -sLo tailwindcss https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.16/tailwindcss-linux-x64 \
-    &&\
-    chmod +x tailwindcss
+    pnpm \
+    templ
 
 RUN curl -fsSL \
     https://raw.githubusercontent.com/pressly/goose/master/install.sh |\
@@ -33,8 +25,8 @@ RUN go mod download -x
 
 COPY . .
 
-RUN templ/templ generate
-
+RUN templ generate
+RUN pnpm exec tailwindcss -o include_dir/output.css -m  &
 RUN goose -dir=assets/migrations/ sqlite3 app.db up
 
 RUN ./tailwindcss -o include_dir/output.css -m
