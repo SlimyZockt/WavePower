@@ -96,24 +96,21 @@ func main() {
 	protocols.SetUnencryptedHTTP2(true)
 
 	server := http.Server{
-		Addr:    ":8080",
-		Handler: stack(router),
+		Addr:      ":8080",
+		Handler:   stack(router),
+		Protocols: &protocols,
 	}
 
 	if !is_dev {
-		server.Protocols = &protocols
+		log.Println("protocols loaded")
 	}
 
 	log.Println("Listening on :8080")
 
-	certFile := ""
-	keyFile := ""
-
 	if is_dev {
-		certFile = "server.pem"
-		keyFile = "server.key"
+		err = server.ListenAndServeTLS("server.pem", "server.key")
+	} else {
+		err = server.ListenAndServe()
 	}
-
-	err = server.ListenAndServeTLS(certFile, keyFile)
 	log.Println(err)
 }
