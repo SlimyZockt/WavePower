@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM alpine:edge AS final
+FROM alpine:3.21 AS final
 WORKDIR /app
 
 RUN --mount=type=cache,target=/var/cache/apk \
