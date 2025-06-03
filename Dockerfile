@@ -15,9 +15,6 @@ RUN --mount=type=cache,target=/var/cache/apk \
 RUN --mount=type=cache,target=/var/cache/apk \
     apk --update add templ --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing/
 
-RUN curl -fsSL \
-    https://raw.githubusercontent.com/pressly/goose/master/install.sh |\
-    sh 
 
 COPY package.json package-lock.json ./
 RUN pnpm install
@@ -29,7 +26,6 @@ COPY . .
 
 RUN templ generate
 RUN pnpm exec tailwindcss -o include_dir/output.css -m
-RUN goose -dir=assets/migrations/ sqlite3 app.db up
 
 # Expose the port that the application listens on.
 EXPOSE 8080
