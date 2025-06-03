@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"slices"
@@ -56,6 +57,7 @@ func writeUnauthed(w http.ResponseWriter) {
 
 func IsAuthenticated(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// _, ok := routes.Sessions["dev"]; ok &&
 		cookie, err := r.Cookie("session_token")
 
 		if err == http.ErrNoCookie {

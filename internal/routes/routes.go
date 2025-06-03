@@ -242,7 +242,6 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 	})
 
 	router.HandleFuncErr("POST /loggedin", func(w http.ResponseWriter, r *http.Request) error {
-
 		user, err := app.getUser(r)
 		if err != nil {
 			return err

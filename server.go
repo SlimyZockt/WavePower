@@ -14,7 +14,7 @@ import (
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/tursodatabase/go-libsql"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -35,39 +35,34 @@ func main() {
 	if err != nil && !os.IsNotExist(err) {
 		log.Fatal(err)
 	}
+	_, is_dev := os.LookupEnv("DEV")
+	log.Println("Is dev: ", is_dev)
 
-	db, err := sql.Open("sqlite3", "./app.db")
-	if err != nil {
-		log.Fatal(err)
+	authToken := os.Getenv("TURSO_AUTH_TOKEN")
+	dbUrl := os.Getenv("TURSO_DATABASE_URL")
+	googleClientId := os.Getenv("GOOGLE_CLIENT_ID")
+	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
+	callbackLink := os.Getenv("CALLBACK_LINK")
+	log.Println(callbackLink)
+
+	if is_dev || dbUrl == "" {
+		dbUrl = "file:./app.db"
 	}
+
+	dbUrl += "?authToken=" + authToken
+
+	db, err := sql.Open("libsql", dbUrl)
+	if err != nil {
+		log.Fatal("failed to open db %s: %s", dbUrl, err)
+	}
+	defer db.Close()
+
 	app := routes.App{
 		AuthCode: GenStrin(16),
 		DB:       db,
 	}
 
 	os.Setenv("SESSION_KEY", app.AuthCode)
-	googleClientId, ok := os.LookupEnv("GOOGLE_CLIENT_ID")
-
-	if !ok {
-		log.Fatal("GOOGLE_CLIENT_ID is missing in the env")
-	}
-
-	googleClientSecret, ok := os.LookupEnv("GOOGLE_CLIENT_SECRET")
-
-	if !ok {
-		log.Fatal("GOOGLE_CLIENT_SECRET is missing in the env")
-	}
-
-	callbackLink, ok := os.LookupEnv("CALLBACK_LINK")
-
-	if !ok {
-		log.Fatal("CALLBACK_LINK is missing in the env")
-	}
-
-	_, is_dev := os.LookupEnv("DEV")
-	log.Println("Is dev: ", is_dev)
-
-	log.Println(callbackLink)
 
 	store := sessions.NewCookieStore([]byte(app.AuthCode))
 	store.MaxAge(86400 * 30)
@@ -93,11 +88,8 @@ func main() {
 	)
 
 	authRouter := app.AuthenticatedRouter()
-	router.Handle("/api/", http.StripPrefix("/api", middleware.IsAuthenticated(authRouter)))
-
-	if err != nil {
-		log.Fatal(err)
-	}
+	authHandler := http.StripPrefix("/api", middleware.IsAuthenticated(authRouter))
+	router.Handle("/api/", authHandler)
 
 	server := http.Server{
 		Addr:    ":8080",
