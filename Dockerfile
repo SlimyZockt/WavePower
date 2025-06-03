@@ -1,37 +1,34 @@
-FROM alpine:3.22 AS final
+FROM fedora:latest AS final
 WORKDIR /app
 
-RUN --mount=type=cache,target=/var/cache/apk \
-    apk --update add \
+RUN dnf update -y && \
+    dnf install -y \
     curl \
-    tzdata \
     ffmpeg \
-    sqlite \
-    build-base \
-    musl-dev \
-    zig \
-    nodejs \
-    pnpm
+    unzip \
+    go \
+    && dnf clean all
 
-RUN --mount=type=cache,target=/var/cache/apk \
-    apk --update add templ cgo --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing/
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:${PATH}"
 
+RUN go install github.com/a-h/templ/cmd/templ@latest
+ENV PATH="/root/go/bin:${PATH}"
 
 COPY package.json package-lock.json ./
-RUN pnpm install
+RUN bun install
 
 COPY go.mod go.sum ./
-RUN cgo mod download -x
+RUN go mod download -x
 
 COPY . .
 
 RUN templ generate
-RUN pnpm exec tailwindcss -o include_dir/output.css -m
-# Expose the port that the application listens on.
+RUN bun tailwindcss -o include_dir/output.css -m
+
 EXPOSE 8080
 
-RUN cgo build -v -o /bin/server
+RUN go build -o /bin/server
 
 # What the container should run when it is started.
 ENTRYPOINT [ "/bin/server" ]
-
