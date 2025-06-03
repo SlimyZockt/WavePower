@@ -1,5 +1,4 @@
-# syntax=docker/dockerfile:1
-FROM alpine:3.21 AS final
+FROM alpine:3.22 AS final
 WORKDIR /app
 
 RUN --mount=type=cache,target=/var/cache/apk \
@@ -8,29 +7,30 @@ RUN --mount=type=cache,target=/var/cache/apk \
     tzdata \
     ffmpeg \
     sqlite \
-    go \
+    build-base \
+    musl-dev \
+    zig \
     nodejs \
     pnpm
 
 RUN --mount=type=cache,target=/var/cache/apk \
-    apk --update add templ --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing/
+    apk --update add templ cgo --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing/
 
 
 COPY package.json package-lock.json ./
 RUN pnpm install
 
 COPY go.mod go.sum ./
-RUN go mod download -x
+RUN cgo mod download -x
 
 COPY . .
 
 RUN templ generate
 RUN pnpm exec tailwindcss -o include_dir/output.css -m
-ENV CGO_LDFLAGS="-Wl,--no-as-needed"
 # Expose the port that the application listens on.
 EXPOSE 8080
 
-RUN go build -o /bin/server
+RUN cgo build -v -o /bin/server
 
 # What the container should run when it is started.
 ENTRYPOINT [ "/bin/server" ]
