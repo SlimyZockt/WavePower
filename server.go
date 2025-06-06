@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"log"
 	"math/rand"
@@ -10,11 +9,6 @@ import (
 	"server/internal/middleware"
 	"server/internal/routes"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
 	"github.com/markbates/goth"
@@ -44,43 +38,16 @@ func main() {
 	_, isDev := os.LookupEnv("DEV")
 	log.Println("Is dev: ", isDev)
 
-	// DB
-	authToken := os.Getenv("TURSO_AUTH_TOKEN")
-	dbUrl := os.Getenv("TURSO_DATABASE_URL")
-
 	// AUTH
 	googleClientId := os.Getenv("GOOGLE_CLIENT_ID")
 	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
 	callbackLink := os.Getenv("CALLBACK_LINK")
 
-	// S3
-	// s3Token := os.Getenv("S3_TOKEN")
-	s3ID := os.Getenv("S3_ID")
-	s3Secret := os.Getenv("S3_SECRET")
-	s3Endpoint := os.Getenv("S3_ENDPOINT")
-
-	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithCredentialsProvider(
-			credentials.NewStaticCredentialsProvider(s3ID, s3Secret, ""),
-		),
-		config.WithRegion("auto"),
-	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		o.BaseEndpoint = aws.String(s3Endpoint)
-	})
-
-	uploader := manager.NewUploader(client)
-	downloader := manager.NewDownloader(client)
-
-	if isDev || dbUrl == "" {
-		dbUrl = "file:./app.db"
-	}
-
-	dbUrl += "?authToken=" + authToken
+	dbUrl := "file:./app.db"
 
 	db, err := sql.Open("libsql", dbUrl)
 	if err != nil {
@@ -89,11 +56,9 @@ func main() {
 	defer db.Close()
 
 	app := routes.App{
-		isDev,
-		GenStrin(16),
-		db,
-		uploader,
-		downloader,
+		IsDev:    isDev,
+		AuthCode: GenStrin(16),
+		DB:       db,
 	}
 
 	os.Setenv("SESSION_KEY", app.AuthCode)
@@ -124,7 +89,7 @@ func main() {
 	authRouter := app.AuthenticatedRouter()
 	authHandler := http.StripPrefix(
 		"/api",
-		middleware.IsAuthenticated(authRouter, app),
+		middleware.IsAuthenticated(authRouter),
 	)
 	router.Handle("/api/", authHandler)
 
