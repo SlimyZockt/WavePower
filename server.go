@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"math/rand"
@@ -9,6 +10,11 @@ import (
 	"server/internal/middleware"
 	"server/internal/routes"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
 	"github.com/markbates/goth"
@@ -35,17 +41,42 @@ func main() {
 	if err != nil && !os.IsNotExist(err) {
 		log.Fatal(err)
 	}
-	_, is_dev := os.LookupEnv("DEV")
-	log.Println("Is dev: ", is_dev)
+	_, isDev := os.LookupEnv("DEV")
+	log.Println("Is dev: ", isDev)
 
+	// DB
 	authToken := os.Getenv("TURSO_AUTH_TOKEN")
 	dbUrl := os.Getenv("TURSO_DATABASE_URL")
+
+	// AUTH
 	googleClientId := os.Getenv("GOOGLE_CLIENT_ID")
 	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
 	callbackLink := os.Getenv("CALLBACK_LINK")
-	log.Println(callbackLink)
 
-	if is_dev || dbUrl == "" {
+	// S3
+	// s3Token := os.Getenv("S3_TOKEN")
+	s3ID := os.Getenv("S3_ID")
+	s3Secret := os.Getenv("S3_SECRET")
+	s3Endpoint := os.Getenv("S3_ENDPOINT")
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(s3ID, s3Secret, ""),
+		),
+		config.WithRegion("auto"),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.BaseEndpoint = aws.String(s3Endpoint)
+	})
+
+	uploader := manager.NewUploader(client)
+	downloader := manager.NewDownloader(client)
+
+	if isDev || dbUrl == "" {
 		dbUrl = "file:./app.db"
 	}
 
@@ -53,13 +84,16 @@ func main() {
 
 	db, err := sql.Open("libsql", dbUrl)
 	if err != nil {
-		log.Fatal("failed to open db %s: %s", dbUrl, err)
+		log.Fatalf("failed to open db %s: %s", dbUrl, err)
 	}
 	defer db.Close()
 
 	app := routes.App{
-		AuthCode: GenStrin(16),
-		DB:       db,
+		isDev,
+		GenStrin(16),
+		db,
+		uploader,
+		downloader,
 	}
 
 	os.Setenv("SESSION_KEY", app.AuthCode)
@@ -68,7 +102,7 @@ func main() {
 	store.MaxAge(86400 * 30)
 
 	store.Options.Path = "/"
-	store.Options.Secure = !is_dev
+	store.Options.Secure = !isDev
 	store.Options.HttpOnly = true
 
 	gothic.Store = store
@@ -88,7 +122,10 @@ func main() {
 	)
 
 	authRouter := app.AuthenticatedRouter()
-	authHandler := http.StripPrefix("/api", middleware.IsAuthenticated(authRouter))
+	authHandler := http.StripPrefix(
+		"/api",
+		middleware.IsAuthenticated(authRouter, app),
+	)
 	router.Handle("/api/", authHandler)
 
 	server := http.Server{
@@ -97,7 +134,7 @@ func main() {
 	}
 
 	log.Println("Listening on :8080")
-	if is_dev {
+	if isDev {
 		err = server.ListenAndServeTLS("server.pem", "server.key")
 
 	} else {

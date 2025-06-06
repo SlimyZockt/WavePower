@@ -24,12 +24,18 @@ import (
 	"time"
 
 	"github.com/a-h/templ"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/markbates/goth/gothic"
 )
 
 type App struct {
-	AuthCode string
-	DB       *sql.DB
+	IsDev      bool
+	AuthCode   string
+	DB         *sql.DB
+	Uploader   *manager.Uploader
+	Downloader *manager.Downloader
 }
 
 type MuxWrapper struct {
@@ -37,11 +43,6 @@ type MuxWrapper struct {
 }
 
 var Sessions = map[string]user.User{}
-
-func writeBadRequest(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusBadRequest)
-	w.Write([]byte(http.StatusText(http.StatusBadRequest)))
-}
 
 func (mux *MuxWrapper) HandleFuncErr(path string, callback func(http.ResponseWriter, *http.Request) error) {
 	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
@@ -426,6 +427,11 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 				errChan <- err
 				return
 			}
+
+			// app.Uploader.Upload(context.TODO(),&s3.PutObjectInput{
+			// 	aws.String("wavepower"),
+			// 	aws.String(),
+			// })
 
 		}()
 
