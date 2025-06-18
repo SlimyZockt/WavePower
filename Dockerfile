@@ -15,7 +15,7 @@ ENV PATH="/root/.bun/bin:${PATH}"
 RUN go install github.com/a-h/templ/cmd/templ@latest
 ENV PATH="/root/go/bin:${PATH}"
 
-COPY package.json package-lock.json ./
+COPY package.json bun.lock ./
 RUN bun install
 
 COPY go.mod go.sum ./
