@@ -48,6 +48,10 @@ func main() {
 	}
 
 	dbUrl := "file:./app.db"
+	if !isDev {
+		dbUrl = os.Getenv("TURSO_DATABASE_URL")
+		dbUrl += "?authToken=" + os.Getenv("TURSO_AUTH_TOKEN")
+	}
 
 	db, err := sql.Open("libsql", dbUrl)
 	if err != nil {
