@@ -445,8 +445,8 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 		scanner := bufio.NewScanner(metadata_file)
 
 		metadata_map := map[string](*string){
-			"TITLE":  &trackData.Title,
-			"ARTIST": &trackData.Artist,
+			"title":  &trackData.Title,
+			"artist": &trackData.Artist,
 		}
 
 		for scanner.Scan() {
