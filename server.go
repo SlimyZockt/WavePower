@@ -50,6 +50,14 @@ func main() {
 	dbUrl := "file:./app.db"
 
 	db, err := sql.Open("libsql", dbUrl)
+	db.Exec(
+		`CREATE TABLE users (
+	id VARCHAR(255) PRIMARY KEY  NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    playlist TEXT NOT NULL,
+    name VARCHAR(255) NOT NULL`,
+		nil,
+	)
 	if err != nil {
 		log.Fatalf("failed to open db %s: %s", dbUrl, err)
 	}

@@ -422,12 +422,6 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 				errChan <- err
 				return
 			}
-
-			// app.Uploader.Upload(context.TODO(),&s3.PutObjectInput{
-			// 	aws.String("wavepower"),
-			// 	aws.String(),
-			// })
-
 		}()
 
 		if <-errChan != nil {
@@ -452,11 +446,8 @@ func (app *App) AuthenticatedRouter() *MuxWrapper {
 		for scanner.Scan() {
 			text := scanner.Text()
 			for key, val := range metadata_map {
-				if strings.HasPrefix(text, key) {
-					data, found := strings.CutPrefix(text, key+"=")
-					if !found {
-						continue
-					}
+				if strings.HasPrefix(strings.ToLower(text), key) {
+					data := text[len(key)+1:]
 					*val = data
 				}
 			}
