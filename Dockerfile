@@ -24,7 +24,7 @@ RUN go mod download -x
 COPY . .
 
 RUN templ generate
-RUN bun tailwindcss -o include_dir/output.css -m
+RUN bunx tailwind -o include_dir/output.css -m
 
 EXPOSE 8080
 
