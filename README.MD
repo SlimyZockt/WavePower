@@ -12,6 +12,13 @@ GOOGLE_CLIENT_SECRET="s3cR3t-69"
 CALLBACK_LINK="https://localhost:8080/auth/google/callback"
 ```
 
+You also need to add your Turso auth Token and URL.
+
+```bash
+TURSO_DATABASE_URL="libsql://name.location.turso.io"
+TURSO_AUTH_TOKEN="key"
+```
+
 You can add DEV to enable dev mode
 ```bash
 DEV=""
