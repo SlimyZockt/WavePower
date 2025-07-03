@@ -388,3 +388,4 @@ async function drop(e, id) {
   // eslint-disable-next-line
   htmx.trigger("#playlist", "playlist-changed", {});
 }
+
